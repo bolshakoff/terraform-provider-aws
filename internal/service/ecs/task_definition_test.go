@@ -107,6 +107,46 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_basic_new(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_basic_new(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", "false"),
+				),
+			},
+			{
+				Config: testAccTaskDefinitionConfig_modified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+			},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -1468,6 +1508,55 @@ resource "aws_ecs_task_definition" "test" {
 	}
 ]
 TASK_DEFINITION
+
+  volume {
+    name      = "jenkins-home"
+    host_path = "/ecs/jenkins-home"
+  }
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_basic_new(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = "%[1]q"
+
+  container_definition {
+    cpu        = 10
+    command    = ["sleep", "10"]
+    entryPoint = ["/"]
+    essential  = true
+    image      = "jenkins"
+    links      = ["mongodb"]
+    memory     = 128
+    name       = "jenkins"
+
+    environment {
+      name  = "VARNAME"
+      value = "VARVAL"
+    }
+
+    port_mapping {
+      containerPort = 80
+      hostPort      = 8080
+    }
+  }
+
+  container_definition {
+    cpu        = 10
+    command    = ["sleep", "10"]
+    entryPoint = ["/"]
+    essential  = true
+    image      = "mongodb"
+    memory     = 128
+    name       = "mongodb"
+
+    port_mapping {
+      containerPort = 28017
+      hostPort      = 28017
+    }
+  }
 
   volume {
     name      = "jenkins-home"
