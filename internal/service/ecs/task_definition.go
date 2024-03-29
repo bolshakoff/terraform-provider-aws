@@ -75,8 +75,9 @@ func ResourceTaskDefinition() *schema.Resource {
 				Computed: true,
 			},
 			"container_definitions": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type: schema.TypeString,
+				// TODO return to true
+				Required: false,
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
@@ -96,6 +97,413 @@ func ResourceTaskDefinition() *schema.Resource {
 					return equal
 				},
 				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
+			},
+			"container_definitions_structured": {
+				Type:     schema.TypeList,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						// Copied from GCP provider
+						"image": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: `URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images`,
+						},
+						"args": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"command": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"depends_on": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `Containers which should be started before this container. If specified the container will wait to start until all containers with the listed names are healthy.`,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"env": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `List of environment variables to set in the container.`,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: `Name of the environment variable. Must be a C_IDENTIFIER, and mnay not exceed 32768 characters.`,
+									},
+									"value": {
+										Type:        schema.TypeString,
+										Optional:    true,
+										Description: `Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any route environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "", and the maximum length is 32768 bytes`,
+									},
+									"value_source": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `Source for the environment variable's value.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"secret_key_ref": {
+													Type:        schema.TypeList,
+													Optional:    true,
+													Description: `Selects a secret and a specific version from Cloud Secret Manager.`,
+													MaxItems:    1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"secret": {
+																Type:        schema.TypeString,
+																Required:    true,
+																Description: `The name of the secret in Cloud Secret Manager. Format: {secretName} if the secret is in the same project. projects/{project}/secrets/{secretName} if the secret is in a different project.`,
+															},
+															"version": {
+																Type:        schema.TypeString,
+																Optional:    true,
+																Description: `The Cloud Secret Manager secret version. Can be 'latest' for the latest value or an integer for a specific version.`,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"liveness_probe": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Optional:    true,
+							Description: `Periodic probe of container liveness. Container will be restarted if the probe fails. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"failure_threshold": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.`,
+										Default:     3,
+									},
+									"grpc": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `GRPC specifies an action involving a GRPC port.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"port": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+													Description: `Port number to access on the container. Number must be in the range 1 to 65535.
+If not specified, defaults to the same value as container.ports[0].containerPort.`,
+												},
+												"service": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Description: `The name of the service to place in the gRPC HealthCheckRequest
+(see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+If this is not specified, the default behavior is defined by gRPC.`,
+												},
+											},
+										},
+									},
+									"http_get": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `HTTPGet specifies the http request to perform.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_headers": {
+													Type:        schema.TypeList,
+													Optional:    true,
+													Description: `Custom headers to set in the request. HTTP allows repeated headers.`,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:        schema.TypeString,
+																Required:    true,
+																Description: `The header field name`,
+															},
+															"value": {
+																Type:        schema.TypeString,
+																Optional:    true,
+																Description: `The header field value`,
+																Default:     "",
+															},
+														},
+													},
+												},
+												"path": {
+													Type:        schema.TypeString,
+													Optional:    true,
+													Description: `Path to access on the HTTP server. Defaults to '/'.`,
+													Default:     "/",
+												},
+												"port": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+													Description: `Port number to access on the container. Number must be in the range 1 to 65535.
+If not specified, defaults to the same value as container.ports[0].containerPort.`,
+												},
+											},
+										},
+									},
+									"initial_delay_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Number of seconds after the container has started before the probe is initiated. Defaults to 0 seconds. Minimum value is 0. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+										Default:     0,
+									},
+									"period_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. Must be greater or equal than timeoutSeconds`,
+										Default:     10,
+									},
+									"tcp_socket": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `TCPSocketAction describes an action based on opening a socket`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"port": {
+													Type:     schema.TypeInt,
+													Required: true,
+													Description: `Port number to access on the container. Must be in the range 1 to 65535.
+If not specified, defaults to the exposed port of the container, which
+is the value of container.ports[0].containerPort.`,
+												},
+											},
+										},
+									},
+									"timeout_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. Maximum value is 3600. Must be smaller than periodSeconds. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+										Default:     1,
+									},
+								},
+							},
+						},
+						"name": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: `Name of the container specified as a DNS_LABEL.`,
+						},
+						"ports": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Optional: true,
+							Description: `List of ports to expose from the container. Only a single port can be specified. The specified ports must be listening on all interfaces (0.0.0.0) within the container to be accessible.
+
+If omitted, a port number will be chosen and passed to the container through the PORT environment variable for the container to listen on`,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_port": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Port number the container listens on. This must be a valid TCP port number, 0 < containerPort < 65536.`,
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Computed:    true,
+										Optional:    true,
+										Description: `If specified, used to specify which protocol to use. Allowed values are "http1" and "h2c".`,
+									},
+								},
+							},
+						},
+						"resources": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Optional:    true,
+							Description: `Compute Resource requirements by this container. More info: https://kubernetes.io/docs/concepts/storage/persistent-volumes#resources`,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cpu_idle": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Description: `Determines whether CPU is only allocated during requests. True by default if the parent 'resources' field is not set. However, if
+'resources' is set, this field must be explicitly set to true to preserve the default behavior.`,
+									},
+									"limits": {
+										Type:        schema.TypeMap,
+										Computed:    true,
+										Optional:    true,
+										Description: `Only memory and CPU are supported. Use key 'cpu' for CPU limit and 'memory' for memory limit. Note: The only supported values for CPU are '1', '2', '4', and '8'. Setting 4 CPU requires at least 2Gi of memory. The values of the map is string form of the 'quantity' k8s type: https://github.com/kubernetes/kubernetes/blob/master/staging/src/k8s.io/apimachinery/pkg/api/resource/quantity.go`,
+										Elem:        &schema.Schema{Type: schema.TypeString},
+									},
+									"startup_cpu_boost": {
+										Type:        schema.TypeBool,
+										Optional:    true,
+										Description: `Determines whether CPU should be boosted on startup of a new container instance above the requested CPU threshold, this can help reduce cold-start latency.`,
+									},
+								},
+							},
+						},
+						"startup_probe": {
+							Type:        schema.TypeList,
+							Computed:    true,
+							Optional:    true,
+							Description: `Startup probe of application within the container. All other probes are disabled if a startup probe is provided, until it succeeds. Container will not be added to service endpoints if the probe fails. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+							MaxItems:    1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"failure_threshold": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Minimum consecutive failures for the probe to be considered failed after having succeeded. Defaults to 3. Minimum value is 1.`,
+										Default:     3,
+									},
+									"grpc": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `GRPC specifies an action involving a GRPC port.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"port": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+													Description: `Port number to access on the container. Number must be in the range 1 to 65535.
+If not specified, defaults to the same value as container.ports[0].containerPort.`,
+												},
+												"service": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Description: `The name of the service to place in the gRPC HealthCheckRequest
+(see https://github.com/grpc/grpc/blob/master/doc/health-checking.md).
+If this is not specified, the default behavior is defined by gRPC.`,
+												},
+											},
+										},
+									},
+									"http_get": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `HTTPGet specifies the http request to perform. Exactly one of HTTPGet or TCPSocket must be specified.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"http_headers": {
+													Type:        schema.TypeList,
+													Optional:    true,
+													Description: `Custom headers to set in the request. HTTP allows repeated headers.`,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"name": {
+																Type:        schema.TypeString,
+																Required:    true,
+																Description: `The header field name`,
+															},
+															"value": {
+																Type:        schema.TypeString,
+																Optional:    true,
+																Description: `The header field value`,
+																Default:     "",
+															},
+														},
+													},
+												},
+												"path": {
+													Type:        schema.TypeString,
+													Optional:    true,
+													Description: `Path to access on the HTTP server. Defaults to '/'.`,
+													Default:     "/",
+												},
+												"port": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+													Description: `Port number to access on the container. Must be in the range 1 to 65535.
+If not specified, defaults to the same value as container.ports[0].containerPort.`,
+												},
+											},
+										},
+									},
+									"initial_delay_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Number of seconds after the container has started before the probe is initiated. Defaults to 0 seconds. Minimum value is 0. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+										Default:     0,
+									},
+									"period_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `How often (in seconds) to perform the probe. Default to 10 seconds. Minimum value is 1. Maximum value for liveness probe is 3600. Maximum value for startup probe is 240. Must be greater or equal than timeoutSeconds`,
+										Default:     10,
+									},
+									"tcp_socket": {
+										Type:        schema.TypeList,
+										Optional:    true,
+										Description: `TCPSocket specifies an action involving a TCP port. Exactly one of HTTPGet or TCPSocket must be specified.`,
+										MaxItems:    1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"port": {
+													Type:     schema.TypeInt,
+													Computed: true,
+													Optional: true,
+													Description: `Port number to access on the container. Must be in the range 1 to 65535.
+If not specified, defaults to the same value as container.ports[0].containerPort.`,
+												},
+											},
+										},
+									},
+									"timeout_seconds": {
+										Type:        schema.TypeInt,
+										Optional:    true,
+										Description: `Number of seconds after which the probe times out. Defaults to 1 second. Minimum value is 1. Maximum value is 3600. Must be smaller than periodSeconds. More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`,
+										Default:     1,
+									},
+								},
+							},
+						},
+						"volume_mounts": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `Volume to mount into the container's filesystem.`,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"mount_path": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: `Path within the container at which the volume should be mounted. Must not contain ':'. For Cloud SQL volumes, it can be left empty, or must otherwise be /cloudsql. All instances defined in the Volume will be available as /cloudsql/[instance]. For more information on Cloud SQL volumes, visit https://cloud.google.com/sql/docs/mysql/connect-run`,
+									},
+									"name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: `This must match the Name of a Volume.`,
+									},
+								},
+							},
+						},
+						"working_dir": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: `Container's working directory. If not specified, the container runtime's default will be used, which might be configured in the container image.`,
+						},
+					},
+				},
 			},
 			"cpu": {
 				Type:     schema.TypeString,
@@ -456,13 +864,26 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	rawDefinitions := d.Get("container_definitions").(string)
-	definitions, err := expandContainerDefinitions(rawDefinitions)
+	containerDefinitionsJSON, err := expandContainerDefinitions(rawDefinitions)
 	if err != nil {
+		// TODO improve error message
 		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
 	}
 
+	// TODO: add logic for the precedence of formats
+
+	v := d.Get("container_definitions_structured").([]interface{})
+	containerDefinitionsStructured := expandContainerDefinitionsStructured(v)
+
+	var containerDefinitions []*ecs.ContainerDefinition
+	if containerDefinitionsStructured != nil {
+		containerDefinitions = containerDefinitionsStructured
+	} else {
+		containerDefinitions = containerDefinitionsJSON
+	}
+
 	input := &ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: definitions,
+		ContainerDefinitions: containerDefinitions,
 		Family:               aws.String(d.Get("family").(string)),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -1204,6 +1625,18 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 	}
 
 	return definitions, nil
+}
+func expandContainerDefinitionsStructured(v []interface{}) []*ecs.ContainerDefinition {
+	if len(v) == 0 {
+		return nil
+	}
+
+	defs := make([]*ecs.ContainerDefinition, 0, len(v))
+	for _, c := range v {
+		defs = append(defs, expandContainerDefinition(c.(map[string]interface{})))
+	}
+
+	return defs
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {

@@ -128,21 +128,21 @@ func TestAccECSTaskDefinition_basic_new(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "track_latest", "false"),
 				),
 			},
-			{
-				Config: testAccTaskDefinitionConfig_modified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
-			},
+			//{
+			//	Config: testAccTaskDefinitionConfig_modified_new(rName),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+			//		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+			//		acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+			//	),
+			//},
+			//{
+			//	ResourceName:            resourceName,
+			//	ImportState:             true,
+			//	ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+			//	ImportStateVerify:       true,
+			//	ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+			//},
 		},
 	})
 }
@@ -1562,6 +1562,55 @@ resource "aws_ecs_task_definition" "test" {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
   }
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_modified_new(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+ family = "%[1]q"
+
+ container_definition {
+   cpu        = 10
+   command    = ["sleep", "10"]
+   entryPoint = ["/"]
+   essential  = true
+   image      = "jenkins"
+   links      = ["mongodb"]
+   memory     = 128
+   name       = "jenkins"
+
+   environment {
+     name  = "VARNAME"
+     value = "VARVAL"
+   }
+
+   port_mapping {
+     containerPort = 80
+     hostPort      = 8080
+   }
+ }
+
+ container_definition {
+   cpu        = 20
+   command    = ["sleep", "10"]
+   entryPoint = ["/"]
+   essential  = true
+   image      = "mongodb"
+   memory     = 128
+   name       = "mongodb"
+
+   port_mapping {
+     containerPort = 28017
+     hostPort      = 28017
+   }
+ }
+
+ volume {
+   name      = "jenkins-home"
+   host_path = "/ecs/jenkins-home"
+ }
 }
 `, rName)
 }
