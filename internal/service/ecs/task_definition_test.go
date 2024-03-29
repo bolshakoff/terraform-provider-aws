@@ -1528,6 +1528,11 @@ resource "aws_ecs_task_definition" "test" {
 	image      = "jenkins"
 	memory     = 128
 	name       = "jenkins"
+
+	cpu 	  = 10
+
+	args = []
+	depends_on = []
 	
 	environment {
 	  name  = "VARNAME"

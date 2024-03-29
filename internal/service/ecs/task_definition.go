@@ -129,6 +129,11 @@ func ResourceTaskDefinition() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
+						"cpu": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: `Number of CPU units reserved for the container. This is optional for tasks using Fargate launch type and the total amount of CPU reserved for all containers in a task will still be limited to the task-level CPU value.`,
+						},
 						"depends_on": {
 							Type:        schema.TypeList,
 							Optional:    true,
@@ -185,6 +190,12 @@ func ResourceTaskDefinition() *schema.Resource {
 									},
 								},
 							},
+						},
+						"essential": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: `If true, the container is marked as essential. If the container fails or stops for any reason, the task will be stopped. If this parameter is omitted, the default value of true is used.`,
+							Default:     true,
 						},
 						"liveness_probe": {
 							Type:        schema.TypeList,
@@ -336,11 +347,11 @@ If omitted, a port number will be chosen and passed to the container through the
 										// TODO add description
 										Description: `Port number the container listens on. This must be a valid TCP port number, 0 < containerPort < 65536.`,
 									},
-									"name": {
+									"protocol": {
 										Type:        schema.TypeString,
-										Computed:    true,
 										Optional:    true,
-										Description: `If specified, used to specify which protocol to use. Allowed values are "http1" and "h2c".`,
+										Description: `The protocol used for the port mapping. Valid values are tcp and udp. Default is tcp.`,
+										Default:     "tcp",
 									},
 								},
 							},
@@ -1049,14 +1060,24 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
 	// some other property changes).
-	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
-	containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
+	// TODO uncomment below
+	//containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
+	//containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
+	//
+	//defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+	//if err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+	//}
+	//err = d.Set("container_definitions", defs)
+	//if err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+	//}
 
-	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+	defs, err := flattenContainerDefinitionsStructured(taskDefinition.ContainerDefinitions)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
 	}
-	err = d.Set("container_definitions", defs)
+	err = d.Set("container_definitions_structured", defs)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
 	}
@@ -1625,6 +1646,92 @@ func flattenContainerDefinitions(definitions []*ecs.ContainerDefinition) (string
 	return string(b), nil
 }
 
+func flattenEnvironment(env []*ecs.KeyValuePair) []map[string]interface{} {
+	var l []map[string]interface{}
+
+	for _, e := range env {
+		entry := make(map[string]interface{})
+		entry["name"] = aws.StringValue(e.Name)
+		entry["value"] = aws.StringValue(e.Value)
+		l = append(l, entry)
+	}
+
+	return l
+}
+
+func flattenPortMappings(portMappings []*ecs.PortMapping) []map[string]interface{} {
+	var l []map[string]interface{}
+
+	for _, p := range portMappings {
+		portMapping := make(map[string]interface{})
+		portMapping["container_port"] = aws.Int64Value(p.ContainerPort)
+
+		if p.HostPort != nil {
+			portMapping["host_port"] = aws.Int64Value(p.HostPort)
+		}
+
+		if p.Protocol != nil {
+			portMapping["protocol"] = aws.StringValue(p.Protocol)
+		}
+
+		l = append(l, portMapping)
+	}
+
+	return l
+
+}
+
+func flattenContainerDefinitionsStructured(definitions []*ecs.ContainerDefinition) ([]interface{}, error) {
+	var l []interface{}
+
+	for _, d := range definitions {
+		container := make(map[string]interface{})
+		container["name"] = aws.StringValue(d.Name)
+		container["image"] = aws.StringValue(d.Image)
+
+		if d.Cpu != nil {
+			// TODO polish conversion
+			container["cpu"] = strconv.FormatInt(aws.Int64Value(d.Cpu), 10)
+		}
+
+		if d.Command != nil {
+			container["command"] = d.Command
+		}
+
+		if d.EntryPoint != nil {
+			container["entry_point"] = d.EntryPoint
+		}
+
+		if d.Essential != nil {
+			container["essential"] = aws.BoolValue(d.Essential)
+		}
+
+		if d.Image != nil {
+			container["image"] = aws.StringValue(d.Image)
+		}
+
+		if d.Links != nil {
+			container["links"] = d.Links
+		}
+
+		if d.Memory != nil {
+			container["memory"] = strconv.FormatInt(aws.Int64Value(d.Memory), 10)
+		}
+
+		if d.Environment != nil {
+			container["environment"] = flattenEnvironment(d.Environment)
+		}
+
+		if d.PortMappings != nil {
+			container["port_mappings"] = flattenPortMappings(d.PortMappings)
+		}
+
+		l = append(l, container)
+	}
+
+	return l, nil
+}
+
 func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefinition, error) {
 	var definitions []*ecs.ContainerDefinition
 
@@ -1697,11 +1804,19 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		}
 
 		// Optional fields should be checked for existence before assignment
-		if v, ok := data["cpu"].(int); ok {
-			definition.Cpu = aws.Int64(int64(v))
-		}
 		if v, ok := data["command"].([]interface{}); ok {
 			definition.Command = flex.ExpandStringList(v)
+		}
+		if v, ok := data["cpu"]; ok {
+			// TODO polish conversion
+			cpuStr := v.(string)                         // Assert that the value is a string
+			cpu, err := strconv.ParseInt(cpuStr, 10, 64) // Convert string to int64
+			if err != nil {
+				// Handle the error, perhaps by logging or setting an error on the resource
+				log.Printf("Error parsing cpu value to int64: %s", err)
+				continue // or return an error, depending on your error handling strategy
+			}
+			definition.Cpu = aws.Int64(cpu)
 		}
 		if v, ok := data["entry_point"].([]interface{}); ok {
 			definition.EntryPoint = flex.ExpandStringList(v)
@@ -1716,6 +1831,7 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 			definition.Links = flex.ExpandStringList(v)
 		}
 		if v, ok := data["memory"]; ok {
+			// TODO polish conversion
 			memoryStr := v.(string)                            // Assert that the value is a string
 			memory, err := strconv.ParseInt(memoryStr, 10, 64) // Convert string to int64
 			if err != nil {
