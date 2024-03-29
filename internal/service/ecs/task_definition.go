@@ -1626,17 +1626,97 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 
 	return definitions, nil
 }
-func expandContainerDefinitionsStructured(v []interface{}) []*ecs.ContainerDefinition {
-	if len(v) == 0 {
-		return nil
+
+func expandEnvironment(l []interface{}) []*ecs.KeyValuePair {
+	var environment []*ecs.KeyValuePair
+
+	for _, raw := range l {
+		data := raw.(map[string]interface{})
+		environment = append(environment, &ecs.KeyValuePair{
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
+		})
 	}
 
-	defs := make([]*ecs.ContainerDefinition, 0, len(v))
-	for _, c := range v {
-		defs = append(defs, expandContainerDefinition(c.(map[string]interface{})))
+	return environment
+}
+
+func expandPortMappings(l []interface{}) []*ecs.PortMapping {
+	var portMappings []*ecs.PortMapping
+
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+
+		data := raw.(map[string]interface{})
+		portMapping := &ecs.PortMapping{
+			ContainerPort: aws.Int64(int64(data["container_port"].(int))),
+		}
+
+		if v, ok := data["host_port"].(int); ok {
+			portMapping.HostPort = aws.Int64(int64(v))
+		}
+		if v, ok := data["protocol"].(string); ok {
+			portMapping.Protocol = aws.String(v)
+		}
+
+		portMappings = append(portMappings, portMapping)
 	}
 
-	return defs
+	return portMappings
+}
+
+func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefinition {
+	var definitions []*ecs.ContainerDefinition
+
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+
+		data := raw.(map[string]interface{})
+		definition := &ecs.ContainerDefinition{
+			Name:  aws.String(data["name"].(string)),
+			Image: aws.String(data["image"].(string)),
+		}
+
+		// Optional fields should be checked for existence before assignment
+		if v, ok := data["cpu"].(int); ok {
+			definition.Cpu = aws.Int64(int64(v))
+		}
+		if v, ok := data["command"].([]interface{}); ok {
+			definition.Command = flex.ExpandStringList(v)
+		}
+		if v, ok := data["entry_point"].([]interface{}); ok {
+			definition.EntryPoint = flex.ExpandStringList(v)
+		}
+		if v, ok := data["essential"].(bool); ok {
+			definition.Essential = aws.Bool(v)
+		}
+		if v, ok := data["image"].(string); ok {
+			definition.Image = aws.String(v)
+		}
+		if v, ok := data["links"].([]interface{}); ok {
+			definition.Links = flex.ExpandStringList(v)
+		}
+		if v, ok := data["memory"].(int); ok {
+			definition.Memory = aws.Int64(int64(v))
+		}
+		if v, ok := data["name"].(string); ok {
+			definition.Name = aws.String(v)
+		}
+		if v, ok := data["environment"].([]interface{}); ok {
+			definition.Environment = expandEnvironment(v)
+		}
+		if v, ok := data["port_mapping"].([]interface{}); ok {
+			definition.PortMappings = expandPortMappings(v)
+		}
+
+		definitions = append(definitions, definition)
+	}
+
+	return definitions
 }
 
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
