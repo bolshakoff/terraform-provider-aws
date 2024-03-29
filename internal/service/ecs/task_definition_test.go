@@ -1518,32 +1518,28 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionConfig_basic_new(rName string) string {
+	// TODO add "links" and "essential" and "entrypoint" and "cpu"
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
 
-  container_definitions_structured = [
-    {
-      cpu        = 10
-      command    = ["sleep", "10"]
-      entryPoint = ["/"]
-      essential  = true
-      image      = "jenkins"
-      links      = ["mongodb"]
-      memory     = 128
-      name       = "jenkins"
-
-      environment = [{
-        name  = "VARNAME"
-        value = "VARVAL"
-      }]
-
-      port_mapping = [{
-        containerPort = 80
-        hostPort      = 8080
-      }]
-    }
-  ]
+  container_definitions_structured {
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkins"
+	
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8080
+	}
+  }
+  
 
   volume {
     name      = "jenkins-home"

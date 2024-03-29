@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -76,8 +77,11 @@ func ResourceTaskDefinition() *schema.Resource {
 			},
 			"container_definitions": {
 				Type: schema.TypeString,
+
 				// TODO return to true
 				Required: false,
+				Optional: true,
+
 				ForceNew: true,
 				StateFunc: func(v interface{}) string {
 					// Sort the lists of environment variables as they are serialized to state, so we won't get
@@ -133,7 +137,7 @@ func ResourceTaskDefinition() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"env": {
+						"environment": {
 							Type:        schema.TypeList,
 							Optional:    true,
 							Description: `List of environment variables to set in the container.`,
@@ -301,12 +305,17 @@ is the value of container.ports[0].containerPort.`,
 								},
 							},
 						},
+						"memory": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: `Memory limit for the container. More info: https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/`,
+						},
 						"name": {
 							Type:        schema.TypeString,
 							Optional:    true,
 							Description: `Name of the container specified as a DNS_LABEL.`,
 						},
-						"ports": {
+						"port_mappings": {
 							Type:     schema.TypeList,
 							Computed: true,
 							Optional: true,
@@ -319,6 +328,12 @@ If omitted, a port number will be chosen and passed to the container through the
 									"container_port": {
 										Type:        schema.TypeInt,
 										Optional:    true,
+										Description: `Port number the container listens on. This must be a valid TCP port number, 0 < containerPort < 65536.`,
+									},
+									"host_port": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										// TODO add description
 										Description: `Port number the container listens on. This must be a valid TCP port number, 0 < containerPort < 65536.`,
 									},
 									"name": {
@@ -863,12 +878,12 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
-	rawDefinitions := d.Get("container_definitions").(string)
-	containerDefinitionsJSON, err := expandContainerDefinitions(rawDefinitions)
-	if err != nil {
-		// TODO improve error message
-		return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
-	}
+	//rawDefinitions := d.Get("container_definitions").(string)
+	//containerDefinitionsJSON, err := expandContainerDefinitions(rawDefinitions)
+	//if err != nil {
+	//	// TODO improve error message
+	//	return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
+	//}
 
 	// TODO: add logic for the precedence of formats
 
@@ -879,7 +894,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	if containerDefinitionsStructured != nil {
 		containerDefinitions = containerDefinitionsStructured
 	} else {
-		containerDefinitions = containerDefinitionsJSON
+		//containerDefinitions = containerDefinitionsJSON
 	}
 
 	input := &ecs.RegisterTaskDefinitionInput{
@@ -1700,8 +1715,15 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		if v, ok := data["links"].([]interface{}); ok {
 			definition.Links = flex.ExpandStringList(v)
 		}
-		if v, ok := data["memory"].(int); ok {
-			definition.Memory = aws.Int64(int64(v))
+		if v, ok := data["memory"]; ok {
+			memoryStr := v.(string)                            // Assert that the value is a string
+			memory, err := strconv.ParseInt(memoryStr, 10, 64) // Convert string to int64
+			if err != nil {
+				// Handle the error, perhaps by logging or setting an error on the resource
+				log.Printf("Error parsing memory value to int64: %s", err)
+				continue // or return an error, depending on your error handling strategy
+			}
+			definition.Memory = aws.Int64(memory)
 		}
 		if v, ok := data["name"].(string); ok {
 			definition.Name = aws.String(v)
@@ -1709,7 +1731,7 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		if v, ok := data["environment"].([]interface{}); ok {
 			definition.Environment = expandEnvironment(v)
 		}
-		if v, ok := data["port_mapping"].([]interface{}); ok {
+		if v, ok := data["port_mappings"].([]interface{}); ok {
 			definition.PortMappings = expandPortMappings(v)
 		}
 
