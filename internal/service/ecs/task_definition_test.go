@@ -1520,50 +1520,37 @@ TASK_DEFINITION
 func testAccTaskDefinitionConfig_basic_new(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
-  family = "%[1]q"
+  family = %[1]q
 
-  container_definition {
-    cpu        = 10
-    command    = ["sleep", "10"]
-    entryPoint = ["/"]
-    essential  = true
-    image      = "jenkins"
-    links      = ["mongodb"]
-    memory     = 128
-    name       = "jenkins"
+  container_definitions_structured = [
+    {
+      cpu        = 10
+      command    = ["sleep", "10"]
+      entryPoint = ["/"]
+      essential  = true
+      image      = "jenkins"
+      links      = ["mongodb"]
+      memory     = 128
+      name       = "jenkins"
 
-    environment {
-      name  = "VARNAME"
-      value = "VARVAL"
+      environment = [{
+        name  = "VARNAME"
+        value = "VARVAL"
+      }]
+
+      port_mapping = [{
+        containerPort = 80
+        hostPort      = 8080
+      }]
     }
-
-    port_mapping {
-      containerPort = 80
-      hostPort      = 8080
-    }
-  }
-
-  container_definition {
-    cpu        = 10
-    command    = ["sleep", "10"]
-    entryPoint = ["/"]
-    essential  = true
-    image      = "mongodb"
-    memory     = 128
-    name       = "mongodb"
-
-    port_mapping {
-      containerPort = 28017
-      hostPort      = 28017
-    }
-  }
+  ]
 
   volume {
     name      = "jenkins-home"
     host_path = "/ecs/jenkins-home"
   }
 }
-`, rName)
+`, rName) // Ensure rName is correctly inserted into the family attribute
 }
 
 func testAccTaskDefinitionConfig_updatedVolume(rName string) string {
