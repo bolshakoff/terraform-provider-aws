@@ -1523,7 +1523,7 @@ func testAccTaskDefinitionConfig_basic_new(rName string) string {
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
 
-  container_definitions_structured {
+  container_definition {
 	command    = ["sleep", "10"]
 	image      = "jenkins"
 	memory     = 128
@@ -1547,7 +1547,7 @@ resource "aws_ecs_task_definition" "test" {
 	}
   }
 	
-  container_definitions_structured {
+  container_definition {
 	command    = ["sleep", "10"]
 	image      = "jenkins"
 	memory     = 128

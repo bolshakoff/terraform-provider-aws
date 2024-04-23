@@ -102,7 +102,7 @@ func ResourceTaskDefinition() *schema.Resource {
 				},
 				ValidateFunc: ValidTaskDefinitionContainerDefinitions,
 			},
-			"container_definitions_structured": {
+			"container_definition": {
 				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
@@ -898,7 +898,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// TODO: add logic for the precedence of formats
 
-	v := d.Get("container_definitions_structured").([]interface{})
+	v := d.Get("container_definition").([]interface{})
 	containerDefinitionsStructured := expandContainerDefinitionsStructured(v)
 
 	var containerDefinitions []*ecs.ContainerDefinition
@@ -1077,7 +1077,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
 	}
-	err = d.Set("container_definitions_structured", defs)
+	err = d.Set("container_definition", defs)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
 	}
