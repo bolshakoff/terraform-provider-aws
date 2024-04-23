@@ -1534,6 +1534,8 @@ resource "aws_ecs_task_definition" "test" {
 	args = []
 	depends_on = []
 	
+
+
 	environment {
 	  name  = "VARNAME"
 	  value = "VARVAL"
@@ -1544,6 +1546,29 @@ resource "aws_ecs_task_definition" "test" {
       host_port      = 8080
 	}
   }
+	
+  container_definitions_structured {
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkinson"
+
+	cpu 	  = 20
+
+	args = []
+	depends_on = []
+	
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8081
+	}
+  }
+
   
 
   volume {
