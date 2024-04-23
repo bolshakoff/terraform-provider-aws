@@ -107,7 +107,28 @@ func ResourceTaskDefinition() *schema.Resource {
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						// Copied from GCP provider
+						"command": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `The command that's passed to the container.`,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"cpu": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: `The number of cpu units reserved for the container.`,
+						},
+						"credentialSpecs": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: `A list of ARNs in SSM or Amazon S3 to a credential spec (CredSpec) file that configures the container for Active Directory authentication.`,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+
 						"image": {
 							Type:        schema.TypeString,
 							Required:    true,
@@ -121,19 +142,7 @@ func ResourceTaskDefinition() *schema.Resource {
 								Type: schema.TypeString,
 							},
 						},
-						"command": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: `Entrypoint array. Not executed within a shell. The docker image's ENTRYPOINT is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-						"cpu": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: `Number of CPU units reserved for the container. This is optional for tasks using Fargate launch type and the total amount of CPU reserved for all containers in a task will still be limited to the task-level CPU value.`,
-						},
+
 						"depends_on": {
 							Type:        schema.TypeList,
 							Optional:    true,

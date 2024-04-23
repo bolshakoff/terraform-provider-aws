@@ -1519,6 +1519,7 @@ TASK_DEFINITION
 
 func testAccTaskDefinitionConfig_basic_new(rName string) string {
 	// TODO add "links" and "essential" and "entrypoint" and "cpu"
+	// TODO consider renaming environment to env
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
