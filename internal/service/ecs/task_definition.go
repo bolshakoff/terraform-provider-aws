@@ -110,7 +110,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"command": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: `The command that's passed to the container.`,
+							Description: "The command that's passed to the container.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -118,35 +118,74 @@ func ResourceTaskDefinition() *schema.Resource {
 						"cpu": {
 							Type:        schema.TypeInt,
 							Optional:    true,
-							Description: `The number of cpu units reserved for the container.`,
+							Description: "The number of cpu units reserved for the container.",
 						},
-						"credentialSpecs": {
+						"credential_specs": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: `A list of ARNs in SSM or Amazon S3 to a credential spec (CredSpec) file that configures the container for Active Directory authentication.`,
+							Description: "A list of ARNs in SSM or Amazon S3 to a credential spec (CredSpec) file that configures the container for Active Directory authentication.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
-
-						"image": {
-							Type:        schema.TypeString,
-							Required:    true,
-							Description: `URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images`,
-						},
-						"args": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: `Arguments to the entrypoint. The docker image's CMD is used if this is not provided. Variable references $(VAR_NAME) are expanded using the container's environment. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`,
-							Elem: &schema.Schema{
-								Type: schema.TypeString,
-							},
-						},
-
 						"depends_on": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: `Containers which should be started before this container. If specified the container will wait to start until all containers with the listed names are healthy.`,
+							Description: "The dependencies defined for container startup and shutdown.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The dependency condition of the container.",
+									},
+									"container_name": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The name of a container.",
+									},
+								},
+							},
+						},
+						"disable_networking": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When this parameter is true, networking is off within the container.",
+						},
+						"dns_search_domains": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of DNS search domains that are presented to the container.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"dns_servers": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of DNS servers that are presented to the container.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"docker_labels": {
+							Type:     schema.TypeMap,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							ForceNew: true,
+							Optional: true,
+						},
+						"docker_security_options": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of strings to provide custom configuration for multiple security systems.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"entry_point": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The entry point that's passed to the container.",
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -154,52 +193,44 @@ func ResourceTaskDefinition() *schema.Resource {
 						"environment": {
 							Type:        schema.TypeList,
 							Optional:    true,
-							Description: `List of environment variables to set in the container.`,
+							Description: "The environment variables to pass to a container.",
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: `Name of the environment variable. Must be a C_IDENTIFIER, and mnay not exceed 32768 characters.`,
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"value": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: `Variable references $(VAR_NAME) are expanded using the previous defined environment variables in the container and any route environment variables. If a variable cannot be resolved, the reference in the input string will be unchanged. The $(VAR_NAME) syntax can be escaped with a double $$, ie: $$(VAR_NAME). Escaped references will never be expanded, regardless of whether the variable exists or not. Defaults to "", and the maximum length is 32768 bytes`,
-									},
-									"value_source": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: `Source for the environment variable's value.`,
-										MaxItems:    1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"secret_key_ref": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: `Selects a secret and a specific version from Cloud Secret Manager.`,
-													MaxItems:    1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"secret": {
-																Type:        schema.TypeString,
-																Required:    true,
-																Description: `The name of the secret in Cloud Secret Manager. Format: {secretName} if the secret is in the same project. projects/{project}/secrets/{secretName} if the secret is in a different project.`,
-															},
-															"version": {
-																Type:        schema.TypeString,
-																Optional:    true,
-																Description: `The Cloud Secret Manager secret version. Can be 'latest' for the latest value or an integer for a specific version.`,
-															},
-														},
-													},
-												},
-											},
-										},
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
 						},
+						"environment_files": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of files containing the environment variables to pass to a container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+
+						"image": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
+						},
+
 						"essential": {
 							Type:        schema.TypeBool,
 							Optional:    true,
@@ -755,12 +786,7 @@ If not specified, defaults to the same value as container.ports[0].containerPort
 										ForceNew: true,
 										Optional: true,
 									},
-									"labels": {
-										Type:     schema.TypeMap,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-										ForceNew: true,
-										Optional: true,
-									},
+
 									"scope": {
 										Type:         schema.TypeString,
 										Optional:     true,
