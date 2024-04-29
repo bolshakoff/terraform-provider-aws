@@ -224,6 +224,86 @@ func ResourceTaskDefinition() *schema.Resource {
 								},
 							},
 						},
+						"essential": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "If the essential parameter of a container is marked as true, and that container fails or stops for any reason, all other containers that are part of the task are stopped. If the essential parameter of a container is marked as false, its failure doesn't affect the rest of the containers in a task. If this parameter is omitted, a container is assumed to be essential.",
+						},
+						"extra_hosts": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of hostnames that are attached to the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hostname": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"ip_address": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"firelens_configuration": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Description: "The FireLens configuration for the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"options": {
+										Type: schema.TypeMap,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										Optional: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"health_check": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Description: "The container health check command and associated configuration parameters for the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"command": {
+										Type: schema.TypeList,
+										Elem: &schema.Schema{
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										Required: true,
+									},
+									"interval": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"retries": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"start_period": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"timeout": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"hostname": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The hostname to use for your container.",
+						},
 
 						"image": {
 							Type:        schema.TypeString,
@@ -231,12 +311,6 @@ func ResourceTaskDefinition() *schema.Resource {
 							Description: "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
 						},
 
-						"essential": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: `If true, the container is marked as essential. If the container fails or stops for any reason, the task will be stopped. If this parameter is omitted, the default value of true is used.`,
-							Default:     true,
-						},
 						"liveness_probe": {
 							Type:        schema.TypeList,
 							Computed:    true,
