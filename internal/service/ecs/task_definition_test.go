@@ -1532,11 +1532,6 @@ resource "aws_ecs_task_definition" "test" {
 
 	cpu 	  = 10
 
-	args = []
-	depends_on = []
-	
-
-
 	environment {
 	  name  = "VARNAME"
 	  value = "VARVAL"
@@ -1555,9 +1550,6 @@ resource "aws_ecs_task_definition" "test" {
 	name       = "jenkinson"
 
 	cpu 	  = 20
-
-	args = []
-	depends_on = []
 	
 	environment {
 	  name  = "VARNAME"

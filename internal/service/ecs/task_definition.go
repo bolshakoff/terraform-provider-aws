@@ -304,11 +304,76 @@ func ResourceTaskDefinition() *schema.Resource {
 							Optional:    true,
 							Description: "The hostname to use for your container.",
 						},
-
 						"image": {
 							Type:        schema.TypeString,
-							Required:    true,
-							Description: "URL of the Container image in Google Container Registry or Google Artifact Registry. More info: https://kubernetes.io/docs/concepts/containers/images",
+							Optional:    true,
+							Description: "The image used to start a container.",
+						},
+						"interactive": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When this parameter is true, you can deploy containerized applications that require stdin or a tty to be allocated.",
+						},
+						"links": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The links parameter allows containers to communicate with each other without the need for port mappings.",
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"linux_parameters": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Description: "A list of Linux parameters to pass to the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capabilities": {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Description: "The Linux capabilities for the container that are added to or dropped from the default configuration provided by Docker.",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"add": {
+													Type: schema.TypeList,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"drop": {
+													Type: schema.TypeList,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+									"devices": {
+										Type:        schema.TypeMap,
+										Optional:    true,
+										Description: "Any host devices to expose to the container.",
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"container_path": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"host_path": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"permissions": {
+													Type: schema.TypeList,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 
 						"liveness_probe": {
