@@ -1562,7 +1562,7 @@ resource "aws_ecs_task_definition" "test" {
 	}
   }
 
-  
+
 
   volume {
     name      = "jenkins-home"
