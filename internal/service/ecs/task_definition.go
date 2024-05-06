@@ -247,7 +247,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"firelens_configuration": {
-							Type:        schema.TypeMap,
+							Type:        schema.TypeList,
+							MaxItems:    1,
 							Optional:    true,
 							Description: "The FireLens configuration for the container.",
 							Elem: &schema.Resource{
@@ -267,7 +268,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"health_check": {
-							Type:        schema.TypeMap,
+							Type:        schema.TypeList,
+							MaxItems:    1,
 							Optional:    true,
 							Description: "The container health check command and associated configuration parameters for the container.",
 							Elem: &schema.Resource{
@@ -323,7 +325,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"linux_parameters": {
-							Type:        schema.TypeMap,
+							Type:        schema.TypeList,
+							MaxItems:    1,
 							Optional:    true,
 							Description: "A list of Linux parameters to pass to the container.",
 							Elem: &schema.Resource{
@@ -423,7 +426,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"log_configuration": {
-							Type:        schema.TypeMap,
+							Type:        schema.TypeList,
+							MaxItems:    1,
 							Optional:    true,
 							Description: "The log configuration for the container.",
 							Elem: &schema.Resource{
@@ -559,7 +563,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							Description: "When this parameter is true, the container is given read-only access to its root file system.",
 						},
 						"repository_credentials": {
-							Type:        schema.TypeMap,
+							Type:        schema.TypeList,
+							MaxItems:    1,
 							Optional:    true,
 							Description: "The private repository authentication credentials to use.",
 							Elem: &schema.Resource{
