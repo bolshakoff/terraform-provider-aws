@@ -543,6 +543,146 @@ func ResourceTaskDefinition() *schema.Resource {
 								},
 							},
 						},
+						"privileged": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When this parameter is true, the container is given elevated privileges on the host container instance (similar to the root user).",
+						},
+						"pseudo_terminal": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When this parameter is true, a TTY is allocated.",
+						},
+						"readonly_root_filesystem": {
+							Type:        schema.TypeBool,
+							Optional:    true,
+							Description: "When this parameter is true, the container is given read-only access to its root file system.",
+						},
+						"repository_credentials": {
+							Type:        schema.TypeMap,
+							Optional:    true,
+							Description: "The private repository authentication credentials to use.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"credentials_parameter": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The Amazon Resource Name (ARN) of the secret containing the private repository credentials.",
+									},
+								},
+							},
+						},
+						"resource_requirements": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The type and amount of a resource to assign to a container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The type of resource to assign to a container.",
+									},
+									"value": {
+										Type:        schema.TypeString,
+										Required:    true,
+										Description: "The value for the specified resource type.",
+									},
+								},
+							},
+						},
+						"secrets": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "The secrets to pass to the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value_from": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"start_timeout": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Time duration (in seconds) to wait before giving up on resolving dependencies for a container.",
+						},
+						"stop_timeout": {
+							Type:        schema.TypeInt,
+							Optional:    true,
+							Description: "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own.",
+						},
+						"system_controls": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of namespaced kernel parameters to set in the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"namespace": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"ulimits": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "A list of ulimits to set in the container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hard_limit": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"soft_limit": {
+										Type:     schema.TypeInt,
+										Required: true,
+									},
+								},
+							},
+						},
+						"user": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The user to use inside the container.",
+						},
+						"volume_from": {
+							Type:        schema.TypeList,
+							Optional:    true,
+							Description: "Data volumes to mount from another container.",
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"read_only": {
+										Type:     schema.TypeBool,
+										Optional: true,
+									},
+									"source_container": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"wodking_directory": {
+							Type:        schema.TypeString,
+							Optional:    true,
+							Description: "The working directory to run commands inside the container in.",
+						},
 					},
 				},
 			},
@@ -880,6 +1020,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						},
 					},
 				},
+
 				Set: resourceTaskDefinitionVolumeHash,
 			},
 		},
