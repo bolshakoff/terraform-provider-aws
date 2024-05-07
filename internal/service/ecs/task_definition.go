@@ -332,7 +332,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capabilities": {
-										Type:        schema.TypeMap,
+										Type:        schema.TypeList,
+										MaxItems:    1,
 										Optional:    true,
 										Description: "The Linux capabilities for the container that are added to or dropped from the default configuration provided by Docker.",
 										Elem: &schema.Resource{
@@ -353,7 +354,8 @@ func ResourceTaskDefinition() *schema.Resource {
 										},
 									},
 									"devices": {
-										Type:        schema.TypeMap,
+										Type:        schema.TypeList,
+										MaxItems:    1,
 										Optional:    true,
 										Description: "Any host devices to expose to the container.",
 										Elem: &schema.Resource{
@@ -446,10 +448,12 @@ func ResourceTaskDefinition() *schema.Resource {
 										Description: "The configuration options to send to the log driver.",
 									},
 									"secret_options": {
-										Type:     schema.TypeMap,
+										Type:     schema.TypeList,
+										MaxItems: 1,
 										Optional: true,
 										Elem: &schema.Schema{
-											Type: schema.TypeMap,
+											Type:     schema.TypeList,
+											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"name": {
