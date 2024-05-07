@@ -339,13 +339,15 @@ func ResourceTaskDefinition() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"add": {
-													Type: schema.TypeList,
+													Type:     schema.TypeList,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
 												},
 												"drop": {
-													Type: schema.TypeList,
+													Type:     schema.TypeList,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -369,7 +371,8 @@ func ResourceTaskDefinition() *schema.Resource {
 													Required: true,
 												},
 												"permissions": {
-													Type: schema.TypeList,
+													Type:     schema.TypeList,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
