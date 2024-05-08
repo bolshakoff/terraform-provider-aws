@@ -1961,56 +1961,107 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 
 		data := raw.(map[string]interface{})
 		definition := &ecs.ContainerDefinition{
-			Name:  aws.String(data["name"].(string)),
-			Image: aws.String(data["image"].(string)),
+			Name: aws.String(data["name"].(string)),
 		}
 
-		// Optional fields should be checked for existence before assignment
-		if v, ok := data["command"].([]interface{}); ok {
-			definition.Command = flex.ExpandStringList(v)
-		}
-		if v, ok := data["cpu"]; ok {
-			// TODO polish conversion
-			cpuStr := v.(string)                         // Assert that the value is a string
-			cpu, err := strconv.ParseInt(cpuStr, 10, 64) // Convert string to int64
-			if err != nil {
-				// Handle the error, perhaps by logging or setting an error on the resource
-				log.Printf("Error parsing cpu value to int64: %s", err)
-				continue // or return an error, depending on your error handling strategy
-			}
-			definition.Cpu = aws.Int64(cpu)
-		}
-		if v, ok := data["entry_point"].([]interface{}); ok {
-			definition.EntryPoint = flex.ExpandStringList(v)
-		}
-		if v, ok := data["essential"].(bool); ok {
-			definition.Essential = aws.Bool(v)
-		}
 		if v, ok := data["image"].(string); ok {
 			definition.Image = aws.String(v)
 		}
-		if v, ok := data["links"].([]interface{}); ok {
-			definition.Links = flex.ExpandStringList(v)
+		if v, ok := data["cpu"].(int); ok {
+			definition.Cpu = aws.Int64(int64(v))
 		}
-		if v, ok := data["memory"]; ok {
-			// TODO polish conversion
-			memoryStr := v.(string)                            // Assert that the value is a string
-			memory, err := strconv.ParseInt(memoryStr, 10, 64) // Convert string to int64
-			if err != nil {
-				// Handle the error, perhaps by logging or setting an error on the resource
-				log.Printf("Error parsing memory value to int64: %s", err)
-				continue // or return an error, depending on your error handling strategy
-			}
-			definition.Memory = aws.Int64(memory)
+		if v, ok := data["memory"].(int); ok {
+			definition.Memory = aws.Int64(int64(v))
 		}
-		if v, ok := data["name"].(string); ok {
-			definition.Name = aws.String(v)
+		if v, ok := data["essential"].(bool); ok {
+			definition.Essential = aws.Bool(v)
 		}
 		if v, ok := data["environment"].([]interface{}); ok {
 			definition.Environment = expandEnvironment(v)
 		}
 		if v, ok := data["port_mappings"].([]interface{}); ok {
 			definition.PortMappings = expandPortMappings(v)
+		}
+		if v, ok := data["entry_point"].([]interface{}); ok {
+			definition.EntryPoint = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["command"].([]interface{}); ok {
+			definition.Command = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["volumes_from"].([]interface{}); ok {
+			definition.VolumesFrom = expandVolumesFrom(v)
+		}
+		if v, ok := data["linux_parameters"].(map[string]interface{}); ok {
+			definition.LinuxParameters = expandLinuxParameters(v)
+		}
+		if v, ok := data["secrets"].([]interface{}); ok {
+			definition.Secrets = expandSecrets(v)
+		}
+		if v, ok := data["depends_on"].([]interface{}); ok {
+			definition.DependsOn = expandContainerDependencies(v)
+		}
+		if v, ok := data["start_timeout"].(int); ok {
+			definition.StartTimeout = aws.Int64(int64(v))
+		}
+		if v, ok := data["stop_timeout"].(int); ok {
+			definition.StopTimeout = aws.Int64(int64(v))
+		}
+		if v, ok := data["hostname"].(string); ok {
+			definition.Hostname = aws.String(v)
+		}
+		if v, ok := data["user"].(string); ok {
+			definition.User = aws.String(v)
+		}
+		if v, ok := data["working_directory"].(string); ok {
+			definition.WorkingDirectory = aws.String(v)
+		}
+		if v, ok := data["disable_networking"].(bool); ok {
+			definition.DisableNetworking = aws.Bool(v)
+		}
+		if v, ok := data["privileged"].(bool); ok {
+			definition.Privileged = aws.Bool(v)
+		}
+		if v, ok := data["readonly_root_filesystem"].(bool); ok {
+			definition.ReadonlyRootFilesystem = aws.Bool(v)
+		}
+		if v, ok := data["dns_servers"].([]interface{}); ok {
+			definition.DnsServers = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["dns_search_domains"].([]interface{}); ok {
+			definition.DnsSearchDomains = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["extra_hosts"].([]interface{}); ok {
+			definition.ExtraHosts = expandExtraHosts(v)
+		}
+		if v, ok := data["docker_security_options"].([]interface{}); ok {
+			definition.DockerSecurityOptions = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["interactive"].(bool); ok {
+			definition.Interactive = aws.Bool(v)
+		}
+		if v, ok := data["pseudo_terminal"].(bool); ok {
+			definition.PseudoTerminal = aws.Bool(v)
+		}
+		if v, ok := data["docker_labels"].(map[string]interface{}); ok {
+			definition.DockerLabels = aws.StringMap(v)
+		}
+		if v, ok := data["ulimits"].([]interface{}); ok {
+			definition.Ulimits = expandUlimits(v)
+		}
+		if v, ok := data["log_configuration"].(map[string]interface{}); ok {
+			definition.LogConfiguration = expandLogConfiguration(v)
+		}
+		if v, ok := data["health_check"].(map[string]interface{}); ok {
+			definition.HealthCheck = expandHealthCheck(v)
+		}
+		if v, ok := data["system_controls"].([]interface{}); ok {
+			definition.SystemControls = expandSystemControls(v)
+		}
+		if v, ok := data["resource_requirements"].([]interface{}); ok {
+			definition.ResourceRequirements = expandResourceRequirements(v)
+		}
+		if v, ok := data["firelens_configuration"].(map[string]interface{}); ok {
+			definition.FirelensConfiguration = expandFirelensConfiguration(v)
 		}
 
 		definitions = append(definitions, definition)
