@@ -277,8 +277,7 @@ func ResourceTaskDefinition() *schema.Resource {
 									"command": {
 										Type: schema.TypeList,
 										Elem: &schema.Schema{
-											Type:     schema.TypeString,
-											Optional: true,
+											Type: schema.TypeString,
 										},
 										Required: true,
 									},
