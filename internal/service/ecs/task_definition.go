@@ -1950,7 +1950,6 @@ func expandPortMappings(l []interface{}) []*ecs.PortMapping {
 
 	return portMappings
 }
-
 func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefinition {
 	var definitions []*ecs.ContainerDefinition
 
@@ -2043,13 +2042,19 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 			definition.PseudoTerminal = aws.Bool(v)
 		}
 		if v, ok := data["docker_labels"].(map[string]interface{}); ok {
-			definition.DockerLabels = aws.StringMap(v)
+			stringMap := make(map[string]string)
+			for key, value := range v {
+				if strVal, ok := value.(string); ok {
+					stringMap[key] = strVal
+				}
+			}
+			definition.DockerLabels = aws.StringMap(stringMap)
 		}
 		if v, ok := data["ulimits"].([]interface{}); ok {
 			definition.Ulimits = expandUlimits(v)
 		}
 		if v, ok := data["log_configuration"].(map[string]interface{}); ok {
-			definition.LogConfiguration = expandLogConfiguration(v)
+			definition.LogConfiguration = expandLogConfigurationStructured(v)
 		}
 		if v, ok := data["health_check"].(map[string]interface{}); ok {
 			definition.HealthCheck = expandHealthCheck(v)
@@ -2070,11 +2075,159 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 	return definitions
 }
 
+// Implementing missing functions
+func expandStringList(v []interface{}) []string {
+	var list []string
+	for _, item := range v {
+		if str, ok := item.(string); ok {
+			list = append(list, str)
+		}
+	}
+	return list
+}
+
+func expandLogConfigurationStructured(config map[string]interface{}) *ecs.LogConfiguration {
+	logConfig := &ecs.LogConfiguration{}
+
+	if v, ok := config["log_driver"].(string); ok {
+		logConfig.LogDriver = aws.String(v)
+	}
+	if v, ok := config["options"].(map[string]interface{}); ok {
+		logConfig.Options = aws.StringMap(flex.ExpandStringyValueMap(v))
+	}
+	if v, ok := config["secret_options"].([]interface{}); ok {
+		logConfig.SecretOptions = expandSecrets(v)
+	}
+
+	return logConfig
+}
+
+func expandResourceRequirements(data []interface{}) []*ecs.ResourceRequirement {
+	results := make([]*ecs.ResourceRequirement, 0, len(data))
+	for _, raw := range data {
+		item := raw.(map[string]interface{})
+		req := &ecs.ResourceRequirement{
+			Type:  aws.String(item["type"].(string)),  // 'type' is a required field
+			Value: aws.String(item["value"].(string)), // 'value' is another field, assuming it's a string
+		}
+		results = append(results, req)
+	}
+	return results
+}
+
+func expandVolumesFrom(v []interface{}) []*ecs.VolumeFrom {
+	var volumes []*ecs.VolumeFrom
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			volume := &ecs.VolumeFrom{
+				SourceContainer: aws.String(mapItem["source_container"].(string)),
+				ReadOnly:        aws.Bool(mapItem["read_only"].(bool)),
+			}
+			volumes = append(volumes, volume)
+		}
+	}
+	return volumes
+}
+
+func expandLinuxParameters(v map[string]interface{}) *ecs.LinuxParameters {
+	return &ecs.LinuxParameters{
+		// Assuming structure based on typical ECS LinuxParameters
+		InitProcessEnabled: aws.Bool(v["init_process_enabled"].(bool)),
+	}
+}
+
+func expandSecrets(v []interface{}) []*ecs.Secret {
+	var secrets []*ecs.Secret
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			secret := &ecs.Secret{
+				Name:      aws.String(mapItem["name"].(string)),
+				ValueFrom: aws.String(mapItem["value_from"].(string)),
+			}
+			secrets = append(secrets, secret)
+		}
+	}
+	return secrets
+}
+
+func expandContainerDependencies(v []interface{}) []*ecs.ContainerDependency {
+	var dependencies []*ecs.ContainerDependency
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			dependency := &ecs.ContainerDependency{
+				ContainerName: aws.String(mapItem["container_name"].(string)),
+				Condition:     aws.String(mapItem["condition"].(string)),
+			}
+			dependencies = append(dependencies, dependency)
+		}
+	}
+	return dependencies
+}
+
+func expandUlimits(v []interface{}) []*ecs.Ulimit {
+	var ulimits []*ecs.Ulimit
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			ulimit := &ecs.Ulimit{
+				Name:      aws.String(mapItem["name"].(string)),
+				SoftLimit: aws.Int64(int64(mapItem["soft_limit"].(int))),
+				HardLimit: aws.Int64(int64(mapItem["hard_limit"].(int))),
+			}
+			ulimits = append(ulimits, ulimit)
+		}
+	}
+	return ulimits
+}
+
+func expandHealthCheck(v map[string]interface{}) *ecs.HealthCheck {
+	return &ecs.HealthCheck{
+		Command:     aws.StringSlice(expandStringList(v["command"].([]interface{}))),
+		Interval:    aws.Int64(int64(v["interval"].(int))),
+		Timeout:     aws.Int64(int64(v["timeout"].(int))),
+		Retries:     aws.Int64(int64(v["retries"].(int))),
+		StartPeriod: aws.Int64(int64(v["start_period"].(int))),
+	}
+}
+
+func expandSystemControls(v []interface{}) []*ecs.SystemControl {
+	var controls []*ecs.SystemControl
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			control := &ecs.SystemControl{
+				Namespace: aws.String(mapItem["namespace"].(string)),
+				Value:     aws.String(mapItem["value"].(string)),
+			}
+			controls = append(controls, control)
+		}
+	}
+	return controls
+}
+
+func expandFirelensConfiguration(v map[string]interface{}) *ecs.FirelensConfiguration {
+	return &ecs.FirelensConfiguration{
+		Type:    aws.String(v["type"].(string)),
+		Options: aws.StringMap(v["options"].(map[string]string)),
+	}
+}
+
+func expandExtraHosts(v []interface{}) []*ecs.HostEntry {
+	var hosts []*ecs.HostEntry
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			host := &ecs.HostEntry{
+				Hostname:  aws.String(mapItem["hostname"].(string)),
+				IpAddress: aws.String(mapItem["ip_address"].(string)),
+			}
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
 	configMap := config[0].(map[string]interface{})
 
 	es := &ecs.EphemeralStorage{
-		SizeInGiB: aws.Int64(int64(configMap["size_in_gib"].(int))),
+		SizeInGiB: aws.Int64(int64(configMap["size_in_gib"].(float64))),
 	}
 
 	return es
