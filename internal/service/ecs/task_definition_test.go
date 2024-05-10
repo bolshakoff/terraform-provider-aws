@@ -1525,6 +1525,8 @@ resource "aws_ecs_task_definition" "test" {
   family = %[1]q
 
   container_definition {
+	essential = true
+
 	command    = ["sleep", "10"]
 	image      = "jenkins"
 	memory     = 128
