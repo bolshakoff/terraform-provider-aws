@@ -2063,7 +2063,7 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 			definition.SystemControls = expandSystemControls(v)
 		}
 		if v, ok := data["resource_requirements"].([]interface{}); ok {
-			definition.ResourceRequirements = expandResourceRequirements(v)
+			definition.ResourceRequirements = expandResourceRequirementsStructured(v)
 		}
 		if v, ok := data["firelens_configuration"].(map[string]interface{}); ok {
 			definition.FirelensConfiguration = expandFirelensConfiguration(v)
@@ -2093,7 +2093,7 @@ func expandLogConfigurationStructured(config map[string]interface{}) *ecs.LogCon
 		logConfig.LogDriver = aws.String(v)
 	}
 	if v, ok := config["options"].(map[string]interface{}); ok {
-		logConfig.Options = aws.StringMap(flex.ExpandStringyValueMap(v))
+		logConfig.Options = expandLogConfigurationOptions(v)
 	}
 	if v, ok := config["secret_options"].([]interface{}); ok {
 		logConfig.SecretOptions = expandSecrets(v)
@@ -2102,7 +2102,15 @@ func expandLogConfigurationStructured(config map[string]interface{}) *ecs.LogCon
 	return logConfig
 }
 
-func expandResourceRequirements(data []interface{}) []*ecs.ResourceRequirement {
+func expandLogConfigurationOptions(v map[string]interface{}) map[string]*string {
+	options := make(map[string]*string)
+	for key, value := range v {
+		options[key] = aws.String(value.(string))
+	}
+	return options
+}
+
+func expandResourceRequirementsStructured(data []interface{}) []*ecs.ResourceRequirement {
 	results := make([]*ecs.ResourceRequirement, 0, len(data))
 	for _, raw := range data {
 		item := raw.(map[string]interface{})
