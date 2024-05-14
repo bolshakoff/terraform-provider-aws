@@ -1538,6 +1538,7 @@ resource "aws_ecs_task_definition" "test" {
 	  name  = "VARNAME"
 	  value = "VARVAL"
 	}
+
 	
 	port_mappings {
       container_port = 80
@@ -1552,6 +1553,8 @@ resource "aws_ecs_task_definition" "test" {
 	name       = "jenkinson"
 
 	cpu 	  = 20
+
+	hostname = "b"
 	
 	environment {
 	  name  = "VARNAME"

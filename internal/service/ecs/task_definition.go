@@ -2005,7 +2005,7 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		if v, ok := data["stop_timeout"].(int); ok {
 			definition.StopTimeout = aws.Int64(int64(v))
 		}
-		if v, ok := data["hostname"].(string); ok {
+		if v, ok := data["hostname"].(string); ok && v != "" {
 			definition.Hostname = aws.String(v)
 		}
 		if v, ok := data["user"].(string); ok {
