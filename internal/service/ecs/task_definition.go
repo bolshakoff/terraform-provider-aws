@@ -108,62 +108,53 @@ func ResourceTaskDefinition() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"command": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The command that's passed to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"cpu": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The number of cpu units reserved for the container.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"credential_specs": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of ARNs in SSM or Amazon S3 to a credential spec (CredSpec) file that configures the container for Active Directory authentication.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"depends_on": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The dependencies defined for container startup and shutdown.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"condition": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The dependency condition of the container.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"container_name": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The name of a container.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
 						},
 						"disable_networking": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "When this parameter is true, networking is off within the container.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"dns_search_domains": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of DNS search domains that are presented to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"dns_servers": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of DNS servers that are presented to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -175,25 +166,22 @@ func ResourceTaskDefinition() *schema.Resource {
 							Optional: true,
 						},
 						"docker_security_options": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of strings to provide custom configuration for multiple security systems.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"entry_point": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The entry point that's passed to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"environment": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The environment variables to pass to a container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -208,9 +196,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"environment_files": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of files containing the environment variables to pass to a container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
@@ -225,14 +212,12 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"essential": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "If the essential parameter of a container is marked as true, and that container fails or stops for any reason, all other containers that are part of the task are stopped. If the essential parameter of a container is marked as false, its failure doesn't affect the rest of the containers in a task. If this parameter is omitted, a container is assumed to be essential.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"extra_hosts": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of hostnames that are attached to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"hostname": {
@@ -247,10 +232,9 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"firelens_configuration": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "The FireLens configuration for the container.",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"options": {
@@ -268,10 +252,9 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"health_check": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "The container health check command and associated configuration parameters for the container.",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"command": {
@@ -301,40 +284,34 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"hostname": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The hostname to use for your container.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"image": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The image used to start a container.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"interactive": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "When this parameter is true, you can deploy containerized applications that require stdin or a tty to be allocated.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"links": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The links parameter allows containers to communicate with each other without the need for port mappings.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
 						},
 						"linux_parameters": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "A list of Linux parameters to pass to the container.",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capabilities": {
-										Type:        schema.TypeList,
-										MaxItems:    1,
-										Optional:    true,
-										Description: "The Linux capabilities for the container that are added to or dropped from the default configuration provided by Docker.",
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"add": {
@@ -355,10 +332,9 @@ func ResourceTaskDefinition() *schema.Resource {
 										},
 									},
 									"devices": {
-										Type:        schema.TypeList,
-										MaxItems:    1,
-										Optional:    true,
-										Description: "Any host devices to expose to the container.",
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"container_path": {
@@ -380,45 +356,37 @@ func ResourceTaskDefinition() *schema.Resource {
 										},
 									},
 									"init_process_enabled": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: "Run an init process inside the container that forwards signals and reaps processes.",
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 									"max_swap": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "The total amount of swap memory (in MiB) a container can use.",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"shared_memory_size": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "The value for the size (in MiB) of the /dev/shm volume.",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"swappiness": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "This allows you to tune a container's memory swappiness behavior.",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"tmpfs": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: "The container path, mount options, and size (in MiB) of the tmpfs mount.",
+										Type:     schema.TypeList,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"container_path": {
-													Type:        schema.TypeString,
-													Required:    true,
-													Description: "The absolute file path where the tmpfs volume is to be mounted.",
+													Type:     schema.TypeString,
+													Required: true,
 												},
 												"size": {
-													Type:        schema.TypeInt,
-													Required:    true,
-													Description: "The maximum size (in MiB) of the tmpfs volume.",
+													Type:     schema.TypeInt,
+													Required: true,
 												},
 												"mount_options": {
-													Type:        schema.TypeList,
-													Optional:    true,
-													Description: "The list of tmpfs volume mount options.",
+													Type:     schema.TypeList,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -430,24 +398,21 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"log_configuration": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "The log configuration for the container.",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_driver": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The log driver to use for the container.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"options": {
 										Type: schema.TypeMap,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Optional:    true,
-										Description: "The configuration options to send to the log driver.",
+										Optional: true,
 									},
 									"secret_options": {
 										Type:     schema.TypeList,
@@ -459,14 +424,12 @@ func ResourceTaskDefinition() *schema.Resource {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"name": {
-														Type:        schema.TypeString,
-														Required:    true,
-														Description: "The name of the secret.",
+														Type:     schema.TypeString,
+														Required: true,
 													},
 													"value_from": {
-														Type:        schema.TypeString,
-														Required:    true,
-														Description: "The secret to expose to the container.",
+														Type:     schema.TypeString,
+														Required: true,
 													},
 												},
 											},
@@ -476,136 +439,113 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"memory": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The amount (in MiB) of memory to present to the container.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"memory_reservation": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "The soft limit (in MiB) of memory to reserve for the container.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"mount_points": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The mount points for data volumes in your container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"container_path": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The path on the container to mount the host volume at.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"read_only": {
-										Type:        schema.TypeBool,
-										Optional:    true,
-										Description: "If this value is true, the container has read-only access to the volume.",
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 									"source_volume": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The name of the volume to mount.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
 						},
 						"name": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The name of a container.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"port_mappings": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The list of port mappings for the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"app_protocol": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The application protocol that's used for the port mapping.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"container_port": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "The port number on the container that's bound to the user-specified or automatically assigned host port.",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"container_port_range": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The port number range on the container that's bound to the dynamically mapped host port range.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"host_port": {
-										Type:        schema.TypeInt,
-										Optional:    true,
-										Description: "The port number on the container instance to reserve for your container.",
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 									"name": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The name that's used for the port mapping.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 									"protocol": {
-										Type:        schema.TypeString,
-										Optional:    true,
-										Description: "The protocol used for the port mapping.",
+										Type:     schema.TypeString,
+										Optional: true,
 									},
 								},
 							},
 						},
 						"privileged": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "When this parameter is true, the container is given elevated privileges on the host container instance (similar to the root user).",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"pseudo_terminal": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "When this parameter is true, a TTY is allocated.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"readonly_root_filesystem": {
-							Type:        schema.TypeBool,
-							Optional:    true,
-							Description: "When this parameter is true, the container is given read-only access to its root file system.",
+							Type:     schema.TypeBool,
+							Optional: true,
 						},
 						"repository_credentials": {
-							Type:        schema.TypeList,
-							MaxItems:    1,
-							Optional:    true,
-							Description: "The private repository authentication credentials to use.",
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"credentials_parameter": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The Amazon Resource Name (ARN) of the secret containing the private repository credentials.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
 						},
 						"resource_requirements": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The type and amount of a resource to assign to a container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The type of resource to assign to a container.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 									"value": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "The value for the specified resource type.",
+										Type:     schema.TypeString,
+										Required: true,
 									},
 								},
 							},
 						},
 						"secrets": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "The secrets to pass to the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -620,19 +560,16 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"start_timeout": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Time duration (in seconds) to wait before giving up on resolving dependencies for a container.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"stop_timeout": {
-							Type:        schema.TypeInt,
-							Optional:    true,
-							Description: "Time duration (in seconds) to wait before the container is forcefully killed if it doesn't exit normally on its own.",
+							Type:     schema.TypeInt,
+							Optional: true,
 						},
 						"system_controls": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of namespaced kernel parameters to set in the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"namespace": {
@@ -647,9 +584,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"ulimits": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "A list of ulimits to set in the container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"hard_limit": {
@@ -668,14 +604,12 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"user": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The user to use inside the container.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"volume_from": {
-							Type:        schema.TypeList,
-							Optional:    true,
-							Description: "Data volumes to mount from another container.",
+							Type:     schema.TypeList,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"read_only": {
@@ -690,9 +624,8 @@ func ResourceTaskDefinition() *schema.Resource {
 							},
 						},
 						"wodking_directory": {
-							Type:        schema.TypeString,
-							Optional:    true,
-							Description: "The working directory to run commands inside the container in.",
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 					},
 				},
@@ -1911,45 +1844,6 @@ func expandContainerDefinitions(rawDefinitions string) ([]*ecs.ContainerDefiniti
 	return definitions, nil
 }
 
-func expandEnvironment(l []interface{}) []*ecs.KeyValuePair {
-	var environment []*ecs.KeyValuePair
-
-	for _, raw := range l {
-		data := raw.(map[string]interface{})
-		environment = append(environment, &ecs.KeyValuePair{
-			Name:  aws.String(data["name"].(string)),
-			Value: aws.String(data["value"].(string)),
-		})
-	}
-
-	return environment
-}
-
-func expandPortMappings(l []interface{}) []*ecs.PortMapping {
-	var portMappings []*ecs.PortMapping
-
-	for _, raw := range l {
-		if raw == nil {
-			continue
-		}
-
-		data := raw.(map[string]interface{})
-		portMapping := &ecs.PortMapping{
-			ContainerPort: aws.Int64(int64(data["container_port"].(int))),
-		}
-
-		if v, ok := data["host_port"].(int); ok {
-			portMapping.HostPort = aws.Int64(int64(v))
-		}
-		if v, ok := data["protocol"].(string); ok {
-			portMapping.Protocol = aws.String(v)
-		}
-
-		portMappings = append(portMappings, portMapping)
-	}
-
-	return portMappings
-}
 func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefinition {
 	var definitions []*ecs.ContainerDefinition
 
@@ -1966,10 +1860,10 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		if v, ok := data["image"].(string); ok {
 			definition.Image = aws.String(v)
 		}
-		if v, ok := data["cpu"].(int); ok {
+		if v, ok := data["cpu"].(int); ok && v > 0 {
 			definition.Cpu = aws.Int64(int64(v))
 		}
-		if v, ok := data["memory"].(int); ok {
+		if v, ok := data["memory"].(int); ok && v > 0 {
 			definition.Memory = aws.Int64(int64(v))
 		}
 		if v, ok := data["essential"].(bool); ok {
@@ -1999,19 +1893,19 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		if v, ok := data["depends_on"].([]interface{}); ok {
 			definition.DependsOn = expandContainerDependencies(v)
 		}
-		if v, ok := data["start_timeout"].(int); ok {
+		if v, ok := data["start_timeout"].(int); ok && v > 0 {
 			definition.StartTimeout = aws.Int64(int64(v))
 		}
-		if v, ok := data["stop_timeout"].(int); ok {
+		if v, ok := data["stop_timeout"].(int); ok && v > 0 {
 			definition.StopTimeout = aws.Int64(int64(v))
 		}
 		if v, ok := data["hostname"].(string); ok && v != "" {
 			definition.Hostname = aws.String(v)
 		}
-		if v, ok := data["user"].(string); ok {
+		if v, ok := data["user"].(string); ok && v != "" {
 			definition.User = aws.String(v)
 		}
-		if v, ok := data["working_directory"].(string); ok {
+		if v, ok := data["working_directory"].(string); ok && v != "" {
 			definition.WorkingDirectory = aws.String(v)
 		}
 		if v, ok := data["disable_networking"].(bool); ok {
@@ -2075,21 +1969,49 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 	return definitions
 }
 
-// Implementing missing functions
-func expandStringList(v []interface{}) []string {
-	var list []string
-	for _, item := range v {
-		if str, ok := item.(string); ok {
-			list = append(list, str)
-		}
+func expandEnvironment(l []interface{}) []*ecs.KeyValuePair {
+	var environment []*ecs.KeyValuePair
+
+	for _, raw := range l {
+		data := raw.(map[string]interface{})
+		environment = append(environment, &ecs.KeyValuePair{
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
+		})
 	}
-	return list
+
+	return environment
+}
+func expandPortMappings(l []interface{}) []*ecs.PortMapping {
+	var portMappings []*ecs.PortMapping
+
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+
+		data := raw.(map[string]interface{})
+		portMapping := &ecs.PortMapping{
+			ContainerPort: aws.Int64(int64(data["container_port"].(int))),
+		}
+
+		if v, ok := data["host_port"].(int); ok && v > 0 {
+			portMapping.HostPort = aws.Int64(int64(v))
+		}
+		if v, ok := data["protocol"].(string); ok {
+			portMapping.Protocol = aws.String(v)
+		}
+
+		portMappings = append(portMappings, portMapping)
+	}
+
+	return portMappings
 }
 
 func expandLogConfigurationStructured(config map[string]interface{}) *ecs.LogConfiguration {
 	logConfig := &ecs.LogConfiguration{}
 
-	if v, ok := config["log_driver"].(string); ok {
+	if v, ok := config["log_driver"].(string); ok && v != "" {
 		logConfig.LogDriver = aws.String(v)
 	}
 	if v, ok := config["options"].(map[string]interface{}); ok {
@@ -2230,6 +2152,17 @@ func expandExtraHosts(v []interface{}) []*ecs.HostEntry {
 		}
 	}
 	return hosts
+}
+
+// Implementing missing functions
+func expandStringList(v []interface{}) []string {
+	var list []string
+	for _, item := range v {
+		if str, ok := item.(string); ok {
+			list = append(list, str)
+		}
+	}
+	return list
 }
 func expandTaskDefinitionEphemeralStorage(config []interface{}) *ecs.EphemeralStorage {
 	configMap := config[0].(map[string]interface{})
