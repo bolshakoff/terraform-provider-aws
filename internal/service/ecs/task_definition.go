@@ -161,9 +161,9 @@ func ResourceTaskDefinition() *schema.Resource {
 						},
 						"docker_labels": {
 							Type:     schema.TypeMap,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-							ForceNew: true,
 							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"docker_security_options": {
 							Type:     schema.TypeList,
@@ -408,11 +408,11 @@ func ResourceTaskDefinition() *schema.Resource {
 										Required: true,
 									},
 									"options": {
-										Type: schema.TypeMap,
+										Type:     schema.TypeMap,
+										Optional: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
-										Optional: true,
 									},
 									"secret_options": {
 										Type:     schema.TypeList,
