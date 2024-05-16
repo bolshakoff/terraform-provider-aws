@@ -1518,6 +1518,57 @@ TASK_DEFINITION
 }
 
 func testAccTaskDefinitionConfig_basic_new(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definition {
+	essential = true
+
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkins"
+
+	cpu 	  = 10
+
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8080
+	}
+  }
+	
+  container_definition {
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkinson"
+
+	cpu 	  = 20
+
+	hostname = "b"
+	
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8081
+	}
+  }
+}
+`, rName) // Ensure rName is correctly inserted into the family attribute
+}
+
+func testAccTaskDefinitionConfig_basic_new_duo(rName string) string {
 	// TODO add "links" and "essential" and "entrypoint" and "cpu"
 	// TODO consider renaming environment to env
 	return fmt.Sprintf(`
