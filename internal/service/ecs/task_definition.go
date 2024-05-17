@@ -105,11 +105,13 @@ func ResourceTaskDefinition() *schema.Resource {
 			"container_definition": {
 				Type:     schema.TypeList,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"command": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -117,10 +119,12 @@ func ResourceTaskDefinition() *schema.Resource {
 						"cpu": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"credential_specs": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -128,6 +132,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"depends_on": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"condition": {
@@ -144,10 +149,12 @@ func ResourceTaskDefinition() *schema.Resource {
 						"disable_networking": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"dns_search_domains": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -155,6 +162,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"dns_servers": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -168,6 +176,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"docker_security_options": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -175,6 +184,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"entry_point": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -182,15 +192,18 @@ func ResourceTaskDefinition() *schema.Resource {
 						"environment": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -198,15 +211,18 @@ func ResourceTaskDefinition() *schema.Resource {
 						"environment_files": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -214,6 +230,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"essential": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"extra_hosts": {
 							Type:     schema.TypeList,
@@ -223,10 +240,12 @@ func ResourceTaskDefinition() *schema.Resource {
 									"hostname": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"ip_address": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -235,6 +254,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"options": {
@@ -243,10 +263,12 @@ func ResourceTaskDefinition() *schema.Resource {
 											Type: schema.TypeString,
 										},
 										Optional: true,
+										ForceNew: true,
 									},
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -255,6 +277,7 @@ func ResourceTaskDefinition() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"command": {
@@ -263,22 +286,27 @@ func ResourceTaskDefinition() *schema.Resource {
 											Type: schema.TypeString,
 										},
 										Required: true,
+										ForceNew: true,
 									},
 									"interval": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"retries": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"start_period": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"timeout": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -286,18 +314,22 @@ func ResourceTaskDefinition() *schema.Resource {
 						"hostname": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"image": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"interactive": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"links": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -306,17 +338,20 @@ func ResourceTaskDefinition() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"capabilities": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"add": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -324,6 +359,7 @@ func ResourceTaskDefinition() *schema.Resource {
 												"drop": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -335,19 +371,23 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"container_path": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ForceNew: true,
 												},
 												"host_path": {
 													Type:     schema.TypeString,
 													Required: true,
+													ForceNew: true,
 												},
 												"permissions": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -358,35 +398,43 @@ func ResourceTaskDefinition() *schema.Resource {
 									"init_process_enabled": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"max_swap": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"shared_memory_size": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"swappiness": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"tmpfs": {
 										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"container_path": {
 													Type:     schema.TypeString,
 													Required: true,
+													ForceNew: true,
 												},
 												"size": {
 													Type:     schema.TypeInt,
 													Required: true,
+													ForceNew: true,
 												},
 												"mount_options": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
@@ -401,15 +449,18 @@ func ResourceTaskDefinition() *schema.Resource {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"log_driver": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"options": {
 										Type:     schema.TypeMap,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 										},
@@ -418,6 +469,7 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:     schema.TypeList,
 										MaxItems: 1,
 										Optional: true,
+										ForceNew: true,
 										Elem: &schema.Schema{
 											Type:     schema.TypeList,
 											MaxItems: 1,
@@ -426,10 +478,12 @@ func ResourceTaskDefinition() *schema.Resource {
 													"name": {
 														Type:     schema.TypeString,
 														Required: true,
+														ForceNew: true,
 													},
 													"value_from": {
 														Type:     schema.TypeString,
 														Required: true,
+														ForceNew: true,
 													},
 												},
 											},
@@ -441,27 +495,33 @@ func ResourceTaskDefinition() *schema.Resource {
 						"memory": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"memory_reservation": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"mount_points": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"container_path": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"read_only": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"source_volume": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -469,35 +529,43 @@ func ResourceTaskDefinition() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"port_mappings": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"app_protocol": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"container_port": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"container_port_range": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"host_port": {
 										Type:     schema.TypeInt,
 										Optional: true,
+										ForceNew: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"protocol": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -505,24 +573,29 @@ func ResourceTaskDefinition() *schema.Resource {
 						"privileged": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"pseudo_terminal": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"readonly_root_filesystem": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"repository_credentials": {
 							Type:     schema.TypeList,
 							MaxItems: 1,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"credentials_parameter": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -530,15 +603,18 @@ func ResourceTaskDefinition() *schema.Resource {
 						"resource_requirements": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"type": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -546,15 +622,18 @@ func ResourceTaskDefinition() *schema.Resource {
 						"secrets": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"value_from": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -562,23 +641,28 @@ func ResourceTaskDefinition() *schema.Resource {
 						"start_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"stop_timeout": {
 							Type:     schema.TypeInt,
 							Optional: true,
+							ForceNew: true,
 						},
 						"system_controls": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"namespace": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 									"value": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -586,19 +670,23 @@ func ResourceTaskDefinition() *schema.Resource {
 						"ulimits": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"hard_limit": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
 									},
 									"name": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 									"soft_limit": {
 										Type:     schema.TypeInt,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -606,19 +694,23 @@ func ResourceTaskDefinition() *schema.Resource {
 						"user": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"volume_from": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"read_only": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										ForceNew: true,
 									},
 									"source_container": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -626,6 +718,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"wodking_directory": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 					},
 				},
