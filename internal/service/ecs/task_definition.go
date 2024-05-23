@@ -1086,6 +1086,7 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// TODO: add logic for the precedence of formats
 
+	// TODO: GetOK()?
 	v := d.Get("container_definition").([]interface{})
 	containerDefinitionsStructured := expandContainerDefinitionsStructured(v)
 
@@ -1946,8 +1947,10 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 		}
 
 		data := raw.(map[string]interface{})
-		definition := &ecs.ContainerDefinition{
-			Name: aws.String(data["name"].(string)),
+		var definition ecs.ContainerDefinition
+
+		if v, ok := data["name"].(string); ok && v != "" {
+			definition.Name = aws.String(v)
 		}
 
 		if v, ok := data["image"].(string); ok {
@@ -2056,7 +2059,7 @@ func expandContainerDefinitionsStructured(l []interface{}) []*ecs.ContainerDefin
 			definition.FirelensConfiguration = expandFirelensConfiguration(v)
 		}
 
-		definitions = append(definitions, definition)
+		definitions = append(definitions, &definition)
 	}
 
 	return definitions
