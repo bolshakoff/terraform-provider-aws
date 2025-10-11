@@ -86,44 +86,669 @@ func resourceTaskDefinition() *schema.Resource {
 
 		SchemaFunc: func() map[string]*schema.Schema {
 			return map[string]*schema.Schema{
-				names.AttrARN: {
-					Type:     schema.TypeString,
-					Computed: true,
+			names.AttrARN: {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn_without_revision": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"container_definitions": {
+				Type: schema.TypeString,
+
+				// TODO return to true
+				Required: false,
+				Optional: true,
+
+				ForceNew: true,
+				StateFunc: func(v any) string {
+					// Sort the lists of environment variables as they are serialized to state, so we won't get
+					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
+					// but they still show in the plan if some other property changes).
+					orderedCDs, err := expandContainerDefinitions(v.(string))
+					if err != nil {
+						// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
+						// Mimic the pre-v5.59.0 behavior.
+						return "[]"
+					}
+					containerDefinitions(orderedCDs).orderContainers()
+					containerDefinitions(orderedCDs).orderEnvironmentVariables()
+					containerDefinitions(orderedCDs).orderSecrets()
+					containerDefinitions(orderedCDs).compactArrays()
+					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
+					json, _ := structure.NormalizeJsonString(unnormalizedJson)
+					return json
 				},
-				"arn_without_revision": {
-					Type:     schema.TypeString,
-					Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					networkMode, ok := d.GetOk("network_mode")
+					isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
+					equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
+					return equal
 				},
-				"container_definitions": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					StateFunc: func(v any) string {
-						// Sort the lists of environment variables as they are serialized to state, so we won't get
-						// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
-						// but they still show in the plan if some other property changes).
-						orderedCDs, err := expandContainerDefinitions(v.(string))
-						if err != nil {
-							// e.g. The value is unknown ("74D93920-ED26-11E3-AC10-0800200C9A66").
-							// Mimic the pre-v5.59.0 behavior.
-							return "[]"
-						}
-						containerDefinitions(orderedCDs).orderContainers()
-						containerDefinitions(orderedCDs).orderEnvironmentVariables()
-						containerDefinitions(orderedCDs).orderSecrets()
-						containerDefinitions(orderedCDs).compactArrays()
-						unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
-						json, _ := structure.NormalizeJsonString(unnormalizedJson)
-						return json
+				DiffSuppressOnRefresh: true,
+				ValidateFunc:          validTaskDefinitionContainerDefinitions,
+			},
+			"container_definition": {
+				Type:     schema.TypeList,
+				Required: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"command": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"cpu": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"credential_specs": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"depends_on": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"condition": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"container_name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+						},
+						"disable_networking": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"dns_search_domains": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"dns_servers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"docker_labels": {
+							Type:     schema.TypeMap,
+							Optional: true,
+							ForceNew: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"docker_security_options": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"entry_point": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"environment": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"environment_files": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"essential": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"extra_hosts": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hostname": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"ip_address": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"firelens_configuration": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"options": {
+										Type: schema.TypeMap,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										Optional: true,
+										ForceNew: true,
+									},
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"health_check": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"command": {
+										Type: schema.TypeList,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+										Required: true,
+										ForceNew: true,
+									},
+									"interval": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"retries": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"start_period": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"timeout": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"hostname": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"image": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"interactive": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"links": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"linux_parameters": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"capabilities": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"add": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+												"drop": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+									"devices": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"container_path": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ForceNew: true,
+												},
+												"host_path": {
+													Type:     schema.TypeString,
+													Required: true,
+													ForceNew: true,
+												},
+												"permissions": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+									"init_process_enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"max_swap": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"shared_memory_size": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"swappiness": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"tmpfs": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"container_path": {
+													Type:     schema.TypeString,
+													Required: true,
+													ForceNew: true,
+												},
+												"size": {
+													Type:     schema.TypeInt,
+													Required: true,
+													ForceNew: true,
+												},
+												"mount_options": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"log_configuration": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"log_driver": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"options": {
+										Type:     schema.TypeMap,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"secret_options": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Schema{
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"name": {
+														Type:     schema.TypeString,
+														Required: true,
+														ForceNew: true,
+													},
+													"value_from": {
+														Type:     schema.TypeString,
+														Required: true,
+														ForceNew: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"memory": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"memory_reservation": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"mount_points": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_path": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"read_only": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"source_volume": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"port_mappings": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"app_protocol": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"container_port": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"container_port_range": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"host_port": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"protocol": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"privileged": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"pseudo_terminal": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"readonly_root_filesystem": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							ForceNew: true,
+						},
+						"repository_credentials": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"credentials_parameter": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"resource_requirements": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"secrets": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"value_from": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"start_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"stop_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+						},
+						"system_controls": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"namespace": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"ulimits": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"hard_limit": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"soft_limit": {
+										Type:     schema.TypeInt,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"user": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
+						"volume_from": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"read_only": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										ForceNew: true,
+									},
+									"source_container": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+						"wodking_directory": {
+							Type:     schema.TypeString,
+							Optional: true,
+							ForceNew: true,
+						},
 					},
-					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-						networkMode, ok := d.GetOk("network_mode")
-						isAWSVPC := ok && networkMode.(string) == string(awstypes.NetworkModeAwsvpc)
-						equal, _ := containerDefinitionsAreEquivalent(old, new, isAWSVPC)
-						return equal
-					},
-					DiffSuppressOnRefresh: true,
-					ValidateFunc:          validTaskDefinitionContainerDefinitions,
+				},
 				},
 				"cpu": {
 					Type:     schema.TypeString,
@@ -499,7 +1124,8 @@ func resourceTaskDefinitionVolumeSchema() *schema.Schema {
 						},
 					},
 				},
-			},
+
+		},
 		},
 		Set: func(v any) int {
 			var str strings.Builder
@@ -608,13 +1234,28 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).ECSClient(ctx)
 	partition := meta.(*conns.AWSClient).Partition(ctx)
 
-	definitions, err := expandContainerDefinitions(d.Get("container_definitions").(string))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	//rawDefinitions := d.Get("container_definitions").(string)
+	//containerDefinitionsJSON, err := expandContainerDefinitions(rawDefinitions)
+	//if err != nil {
+	//	// TODO improve error message
+	//	return sdkdiag.AppendErrorf(diags, "creating ECS Task Definition (%s): %s", d.Get("family").(string), err)
+	//}
+
+	// TODO: add logic for the precedence of formats
+
+	// TODO: GetOK()?
+	v := d.Get("container_definition").([]interface{})
+	containerDefinitionsStructured := expandContainerDefinitionsStructured(v)
+
+	var containerDefinitions []*awstypes.ContainerDefinition
+	if containerDefinitionsStructured != nil {
+		containerDefinitions = containerDefinitionsStructured
+	} else {
+		//containerDefinitions = containerDefinitionsJSON
 	}
 
 	input := &ecs.RegisterTaskDefinitionInput{
-		ContainerDefinitions: definitions,
+		ContainerDefinitions: containerDefinitions,
 		Family:               aws.String(d.Get(names.AttrFamily).(string)),
 		Tags:                 getTagsIn(ctx),
 	}
@@ -730,6 +1371,35 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 		d.SetId("")
 		return diags
 	}
+
+	d.SetId(aws.ToString(taskDefinition.Family))
+	d.Set("arn", taskDefinition.TaskDefinitionArn)
+	d.Set("arn_without_revision", taskDefinitionARNStripRevision(aws.ToString(taskDefinition.TaskDefinitionArn)))
+	d.Set("family", taskDefinition.Family)
+	d.Set("revision", taskDefinition.Revision)
+	d.Set("track_latest", d.Get("track_latest"))
+
+	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
+	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
+	// some other property changes).
+	// TODO uncomment below
+	//containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
+	//containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
+	//
+	//defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
+	//if err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+	//}
+	//err = d.Set("container_definitions", defs)
+	//if err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+	//}
+
+	defs, err := flattenContainerDefinitionsStructured(taskDefinition.ContainerDefinitions)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", d.Id(), err)
+	}
+	err = d.Set("container_definition", defs)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECS Task Definition (%s): %s", familyOrARN, err)
 	}
@@ -1226,6 +1896,92 @@ func flattenFSxWindowsFileServerVolumeConfiguration(apiObject *awstypes.FSxWindo
 	return tfList
 }
 
+func flattenEnvironment(env []*awstypes.KeyValuePair) []map[string]interface{} {
+	var l []map[string]interface{}
+
+	for _, e := range env {
+		entry := make(map[string]interface{})
+		entry["name"] = aws.ToString(e.Name)
+		entry["value"] = aws.ToString(e.Value)
+		l = append(l, entry)
+	}
+
+	return l
+}
+
+func flattenPortMappings(portMappings []*awstypes.PortMapping) []map[string]interface{} {
+	var l []map[string]interface{}
+
+	for _, p := range portMappings {
+		portMapping := make(map[string]interface{})
+		portMapping["container_port"] = aws.ToInt64(p.ContainerPort)
+
+		if p.HostPort != nil {
+			portMapping["host_port"] = aws.ToInt64(p.HostPort)
+		}
+
+		if p.Protocol != nil {
+			portMapping["protocol"] = aws.ToString(p.Protocol)
+		}
+
+		l = append(l, portMapping)
+	}
+
+	return l
+
+}
+
+func flattenContainerDefinitionsStructured(definitions []*awstypes.ContainerDefinition) ([]interface{}, error) {
+	var l []interface{}
+
+	for _, d := range definitions {
+		container := make(map[string]interface{})
+		container["name"] = aws.ToString(d.Name)
+		container["image"] = aws.ToString(d.Image)
+
+		if d.Cpu != nil {
+			// TODO polish conversion
+			container["cpu"] = strconv.FormatInt(aws.ToInt64(d.Cpu), 10)
+		}
+
+		if d.Command != nil {
+			container["command"] = d.Command
+		}
+
+		if d.EntryPoint != nil {
+			container["entry_point"] = d.EntryPoint
+		}
+
+		if d.Essential != nil {
+			container["essential"] = aws.ToBool(d.Essential)
+		}
+
+		if d.Image != nil {
+			container["image"] = aws.ToString(d.Image)
+		}
+
+		if d.Links != nil {
+			container["links"] = d.Links
+		}
+
+		if d.Memory != nil {
+			container["memory"] = strconv.FormatInt(aws.ToInt64(d.Memory), 10)
+		}
+
+		if d.Environment != nil {
+			container["environment"] = flattenEnvironment(d.Environment)
+		}
+
+		if d.PortMappings != nil {
+			container["port_mappings"] = flattenPortMappings(d.PortMappings)
+		}
+
+		l = append(l, container)
+	}
+
+	return l, nil
+}
+
 func flattenFSxWindowsFileServerAuthorizationConfig(apiObject *awstypes.FSxWindowsFileServerAuthorizationConfig) []any {
 	var tfList []any
 	tfMap := make(map[string]any)
@@ -1245,11 +2001,333 @@ func flattenFSxWindowsFileServerAuthorizationConfig(apiObject *awstypes.FSxWindo
 	return tfList
 }
 
+func expandContainerDefinitionsStructured(l []interface{}) []*awstypes.ContainerDefinition {
+	var definitions []*awstypes.ContainerDefinition
+
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+
+		data := raw.(map[string]interface{})
+		var definition awstypes.ContainerDefinition
+
+		if v, ok := data["name"].(string); ok && v != "" {
+			definition.Name = aws.String(v)
+		}
+
+		if v, ok := data["image"].(string); ok {
+			definition.Image = aws.String(v)
+		}
+		if v, ok := data["cpu"].(int); ok && v > 0 {
+			definition.Cpu = aws.Int64(int64(v))
+		}
+		if v, ok := data["memory"].(int); ok && v > 0 {
+			definition.Memory = aws.Int64(int64(v))
+		}
+		if v, ok := data["essential"].(bool); ok {
+			definition.Essential = aws.Bool(v)
+		}
+		if v, ok := data["environment"].([]interface{}); ok {
+			definition.Environment = expandEnvironment(v)
+		}
+		if v, ok := data["port_mappings"].([]interface{}); ok {
+			definition.PortMappings = expandPortMappings(v)
+		}
+		if v, ok := data["entry_point"].([]interface{}); ok {
+			definition.EntryPoint = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["command"].([]interface{}); ok {
+			definition.Command = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["volumes_from"].([]interface{}); ok {
+			definition.VolumesFrom = expandVolumesFrom(v)
+		}
+		if v, ok := data["linux_parameters"].(map[string]interface{}); ok {
+			definition.LinuxParameters = expandLinuxParameters(v)
+		}
+		if v, ok := data["secrets"].([]interface{}); ok {
+			definition.Secrets = expandSecrets(v)
+		}
+		if v, ok := data["depends_on"].([]interface{}); ok {
+			definition.DependsOn = expandContainerDependencies(v)
+		}
+		if v, ok := data["start_timeout"].(int); ok && v > 0 {
+			definition.StartTimeout = aws.Int64(int64(v))
+		}
+		if v, ok := data["stop_timeout"].(int); ok && v > 0 {
+			definition.StopTimeout = aws.Int64(int64(v))
+		}
+		if v, ok := data["hostname"].(string); ok && v != "" {
+			definition.Hostname = aws.String(v)
+		}
+		if v, ok := data["user"].(string); ok && v != "" {
+			definition.User = aws.String(v)
+		}
+		if v, ok := data["working_directory"].(string); ok && v != "" {
+			definition.WorkingDirectory = aws.String(v)
+		}
+		if v, ok := data["disable_networking"].(bool); ok {
+			definition.DisableNetworking = aws.Bool(v)
+		}
+		if v, ok := data["privileged"].(bool); ok {
+			definition.Privileged = aws.Bool(v)
+		}
+		if v, ok := data["readonly_root_filesystem"].(bool); ok {
+			definition.ReadonlyRootFilesystem = aws.Bool(v)
+		}
+		if v, ok := data["dns_servers"].([]interface{}); ok {
+			definition.DnsServers = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["dns_search_domains"].([]interface{}); ok {
+			definition.DnsSearchDomains = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["extra_hosts"].([]interface{}); ok {
+			definition.ExtraHosts = expandExtraHosts(v)
+		}
+		if v, ok := data["docker_security_options"].([]interface{}); ok {
+			definition.DockerSecurityOptions = aws.StringSlice(expandStringList(v))
+		}
+		if v, ok := data["interactive"].(bool); ok {
+			definition.Interactive = aws.Bool(v)
+		}
+		if v, ok := data["pseudo_terminal"].(bool); ok {
+			definition.PseudoTerminal = aws.Bool(v)
+		}
+		if v, ok := data["docker_labels"].(map[string]interface{}); ok {
+			stringMap := make(map[string]string)
+			for key, value := range v {
+				if strVal, ok := value.(string); ok {
+					stringMap[key] = strVal
+				}
+			}
+			definition.DockerLabels = aws.StringMap(stringMap)
+		}
+		if v, ok := data["ulimits"].([]interface{}); ok {
+			definition.Ulimits = expandUlimits(v)
+		}
+		if v, ok := data["log_configuration"].(map[string]interface{}); ok {
+			definition.LogConfiguration = expandLogConfigurationStructured(v)
+		}
+		if v, ok := data["health_check"].(map[string]interface{}); ok {
+			definition.HealthCheck = expandHealthCheck(v)
+		}
+		if v, ok := data["system_controls"].([]interface{}); ok {
+			definition.SystemControls = expandSystemControls(v)
+		}
+		if v, ok := data["resource_requirements"].([]interface{}); ok {
+			definition.ResourceRequirements = expandResourceRequirementsStructured(v)
+		}
+		if v, ok := data["firelens_configuration"].(map[string]interface{}); ok {
+			definition.FirelensConfiguration = expandFirelensConfiguration(v)
+		}
+
+		definitions = append(definitions, &definition)
+	}
+
+	return definitions
+}
+
+func expandEnvironment(l []interface{}) []*awstypes.KeyValuePair {
+	var environment []*awstypes.KeyValuePair
+
+	for _, raw := range l {
+		data := raw.(map[string]interface{})
+		environment = append(environment, &awstypes.KeyValuePair{
+			Name:  aws.String(data["name"].(string)),
+			Value: aws.String(data["value"].(string)),
+		})
+	}
+
+	return environment
+}
+func expandPortMappings(l []interface{}) []*awstypes.PortMapping {
+	var portMappings []*awstypes.PortMapping
+
+	for _, raw := range l {
+		if raw == nil {
+			continue
+		}
+
+		data := raw.(map[string]interface{})
+		portMapping := &awstypes.PortMapping{
+			ContainerPort: aws.Int64(int64(data["container_port"].(int))),
+		}
+
+		if v, ok := data["host_port"].(int); ok && v > 0 {
+			portMapping.HostPort = aws.Int64(int64(v))
+		}
+		if v, ok := data["protocol"].(string); ok {
+			portMapping.Protocol = aws.String(v)
+		}
+
+		portMappings = append(portMappings, portMapping)
+	}
+
+	return portMappings
+}
+
+func expandLogConfigurationStructured(config map[string]interface{}) *awstypes.LogConfiguration {
+	logConfig := &awstypes.LogConfiguration{}
+
+	if v, ok := config["log_driver"].(string); ok && v != "" {
+		logConfig.LogDriver = aws.String(v)
+	}
+	if v, ok := config["options"].(map[string]interface{}); ok {
+		logConfig.Options = expandLogConfigurationOptions(v)
+	}
+	if v, ok := config["secret_options"].([]interface{}); ok {
+		logConfig.SecretOptions = expandSecrets(v)
+	}
+
+	return logConfig
+}
+
+func expandLogConfigurationOptions(v map[string]interface{}) map[string]*string {
+	options := make(map[string]*string)
+	for key, value := range v {
+		options[key] = aws.String(value.(string))
+	}
+	return options
+}
+
+func expandResourceRequirementsStructured(data []interface{}) []*awstypes.ResourceRequirement {
+	results := make([]*awstypes.ResourceRequirement, 0, len(data))
+	for _, raw := range data {
+		item := raw.(map[string]interface{})
+		req := &awstypes.ResourceRequirement{
+			Type:  aws.String(item["type"].(string)),  // 'type' is a required field
+			Value: aws.String(item["value"].(string)), // 'value' is another field, assuming it's a string
+		}
+		results = append(results, req)
+	}
+	return results
+}
+
+func expandVolumesFrom(v []interface{}) []*awstypes.VolumeFrom {
+	var volumes []*awstypes.VolumeFrom
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			volume := &awstypes.VolumeFrom{
+				SourceContainer: aws.String(mapItem["source_container"].(string)),
+				ReadOnly:        aws.Bool(mapItem["read_only"].(bool)),
+			}
+			volumes = append(volumes, volume)
+		}
+	}
+	return volumes
+}
+
+func expandLinuxParameters(v map[string]interface{}) *awstypes.LinuxParameters {
+	return &awstypes.LinuxParameters{
+		// Assuming structure based on typical ECS LinuxParameters
+		InitProcessEnabled: aws.Bool(v["init_process_enabled"].(bool)),
+	}
+}
+
+func expandSecrets(v []interface{}) []*awstypes.Secret {
+	var secrets []*awstypes.Secret
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			secret := &awstypes.Secret{
+				Name:      aws.String(mapItem["name"].(string)),
+				ValueFrom: aws.String(mapItem["value_from"].(string)),
+			}
+			secrets = append(secrets, secret)
+		}
+	}
+	return secrets
+}
+
+func expandContainerDependencies(v []interface{}) []*awstypes.ContainerDependency {
+	var dependencies []*awstypes.ContainerDependency
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			dependency := &awstypes.ContainerDependency{
+				ContainerName: aws.String(mapItem["container_name"].(string)),
+				Condition:     aws.String(mapItem["condition"].(string)),
+			}
+			dependencies = append(dependencies, dependency)
+		}
+	}
+	return dependencies
+}
+
+func expandUlimits(v []interface{}) []*awstypes.Ulimit {
+	var ulimits []*awstypes.Ulimit
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			ulimit := &awstypes.Ulimit{
+				Name:      aws.String(mapItem["name"].(string)),
+				SoftLimit: aws.Int64(int64(mapItem["soft_limit"].(int))),
+				HardLimit: aws.Int64(int64(mapItem["hard_limit"].(int))),
+			}
+			ulimits = append(ulimits, ulimit)
+		}
+	}
+	return ulimits
+}
+
+func expandHealthCheck(v map[string]interface{}) *awstypes.HealthCheck {
+	return &awstypes.HealthCheck{
+		Command:     aws.StringSlice(expandStringList(v["command"].([]interface{}))),
+		Interval:    aws.Int64(int64(v["interval"].(int))),
+		Timeout:     aws.Int64(int64(v["timeout"].(int))),
+		Retries:     aws.Int64(int64(v["retries"].(int))),
+		StartPeriod: aws.Int64(int64(v["start_period"].(int))),
+	}
+}
+
+func expandSystemControls(v []interface{}) []*awstypes.SystemControl {
+	var controls []*awstypes.SystemControl
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			control := &awstypes.SystemControl{
+				Namespace: aws.String(mapItem["namespace"].(string)),
+				Value:     aws.String(mapItem["value"].(string)),
+			}
+			controls = append(controls, control)
+		}
+	}
+	return controls
+}
+
+func expandFirelensConfiguration(v map[string]interface{}) *awstypes.FirelensConfiguration {
+	return &awstypes.FirelensConfiguration{
+		Type:    aws.String(v["type"].(string)),
+		Options: aws.StringMap(v["options"].(map[string]string)),
+	}
+}
+
+func expandExtraHosts(v []interface{}) []*awstypes.HostEntry {
+	var hosts []*awstypes.HostEntry
+	for _, item := range v {
+		if mapItem, ok := item.(map[string]interface{}); ok {
+			host := &awstypes.HostEntry{
+				Hostname:  aws.String(mapItem["hostname"].(string)),
+				IpAddress: aws.String(mapItem["ip_address"].(string)),
+			}
+			hosts = append(hosts, host)
+		}
+	}
+	return hosts
+}
+
+// Implementing missing functions
+func expandStringList(v []interface{}) []string {
+	var list []string
+	for _, item := range v {
+		if str, ok := item.(string); ok {
+			list = append(list, str)
+		}
+	}
+	return list
+}
 func expandEphemeralStorage(tfList []any) *awstypes.EphemeralStorage {
 	tfMap := tfList[0].(map[string]any)
 
 	apiObject := &awstypes.EphemeralStorage{
-		SizeInGiB: int32(tfMap["size_in_gib"].(int)),
+		SizeInGiB: int32(tfMap["size_in_gib"].(float64)),
 	}
 
 	return apiObject

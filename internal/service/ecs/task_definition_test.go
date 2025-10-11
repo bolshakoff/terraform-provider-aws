@@ -170,6 +170,46 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_basic_new(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_basic_new(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", "false"),
+				),
+			},
+			//{
+			//	Config: testAccTaskDefinitionConfig_modified_new(rName),
+			//	Check: resource.ComposeTestCheckFunc(
+			//		testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+			//		acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+			//		acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+			//	),
+			//},
+			//{
+			//	ResourceName:            resourceName,
+			//	ImportState:             true,
+			//	ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+			//	ImportStateVerify:       true,
+			//	ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+			//},
+		},
+	})
+}
+
 // Regression for https://github.com/hashicorp/terraform/issues/2370
 func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2123,6 +2163,117 @@ TASK_DEFINITION
   }
 }
 `, rName)
+}
+
+func testAccTaskDefinitionConfig_basic_new(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definition {
+	essential = true
+
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkins"
+
+	cpu 	  = 10
+
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8080
+	}
+  }
+	
+  container_definition {
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkinson"
+
+	cpu 	  = 20
+
+	hostname = "b"
+	
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8081
+	}
+  }
+}
+`, rName) // Ensure rName is correctly inserted into the family attribute
+}
+
+func testAccTaskDefinitionConfig_basic_new_duo(rName string) string {
+	// TODO add "links" and "essential" and "entrypoint" and "cpu"
+	// TODO consider renaming environment to env
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definition {
+	essential = true
+
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkins"
+
+	cpu 	  = 10
+
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8080
+	}
+  }
+	
+  container_definition {
+	command    = ["sleep", "10"]
+	image      = "jenkins"
+	memory     = 128
+	name       = "jenkinson"
+
+	cpu 	  = 20
+
+	hostname = "b"
+	
+	environment {
+	  name  = "VARNAME"
+	  value = "VARVAL"
+	}
+	
+	port_mappings {
+      container_port = 80
+      host_port      = 8081
+	}
+  }
+
+
+
+  volume {
+    name      = "jenkins-home"
+    host_path = "/ecs/jenkins-home"
+  }
+}
+`, rName) // Ensure rName is correctly inserted into the family attribute
 }
 
 func testAccTaskDefinitionConfig_updatedVolume(rName string) string {
